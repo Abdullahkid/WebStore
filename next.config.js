@@ -10,12 +10,17 @@ const nextConfig = {
   },
   
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'downxtown.com'],
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '8080',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'downxtown.com',
         pathname: '/**',
       },
     ],
