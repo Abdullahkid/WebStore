@@ -86,19 +86,19 @@ export default function StoreHeader({ storeData }: StoreHeaderProps) {
         </div>
         
         {/* Store Logo - Enhanced positioning and styling */}
-        <div className="absolute bottom-0 left-8 transform translate-y-1/2">
+        <div className="absolute bottom-0 left-8 transform translate-y-1/3">
           <div className="relative">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-premium border-2 border-white/50 overflow-visible bg-white hover-lift">
+            <div className="w-36 h-36 md:w-44 md:h-44 rounded-3xl shadow-premium border-2 border-white/50 overflow-hidden bg-white hover-lift">
               {storeData.storeLogo ? (
                 <OptimizedImage
                   imageId={storeData.storeLogo}
                   alt={`${storeData.storeName} logo`}
                   variant="preview"
-                  className="w-full h-full object-contain p-2"
+                  className="w-full h-full object-cover p-0"
                 />
               ) : (
                 <div className="w-full h-full gradient-primary flex items-center justify-center">
-                  <span className="text-white font-bold text-3xl md:text-4xl">
+                  <span className="text-white font-bold text-4xl md:text-5xl">
                     {storeData.storeName.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -114,7 +114,7 @@ export default function StoreHeader({ storeData }: StoreHeaderProps) {
       </div>
       
       {/* Store Info Section */}
-      <div className="gradient-surface px-8 pt-24 md:pt-28 pb-8">
+      <div className="gradient-surface px-8 pt-24 pb-8">
         {/* Store Name & Category */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-4">
