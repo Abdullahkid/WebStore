@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --no-warnings\" UV_THREADPOOL_SIZE=1 NEXT_TELEMETRY_DISABLED=1 next dev",
-    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --no-warnings\" UV_THREADPOOL_SIZE=1 next build",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" UV_THREADPOOL_SIZE=1 NEXT_TELEMETRY_DISABLED=1 next build",
+    "build:clean": "npm run clean && npm run build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rimraf .next out node_modules/.cache",
+    "clean:full": "rimraf .next out node_modules package-lock.json && npm install",
+    "prebuild": "npm run clean"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^13.5.6",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -19,7 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.542.0",
-    "next": "^13.5.6",
+    "next": "13.5.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.4"
@@ -31,10 +34,16 @@
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^13.5.6",
+    "eslint-config-next": "13.5.6",
     "postcss": "^8.4.49",
+    "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"
+  },
+  "overrides": {
+    "next": {
+      "@next/swc-win32-x64-msvc": "13.5.6"
+    }
   }
 }

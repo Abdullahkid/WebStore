@@ -1,14 +1,50 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Simple webpack config for maximum stability
-  webpack: (config, { dev }) => {
+  // Disable SWC minification to avoid worker issues
+  swcMinify: false,
+  
+  // Optimize webpack configuration for Windows
+  webpack: (config, { dev, isServer }) => {
+    // Disable parallelism to prevent worker issues
     config.parallelism = 1;
-    if (dev) {
-      config.optimization.minimize = false;
+    
+    // Disable cache to prevent corruption issues
+    config.cache = false;
+    
+    // Additional optimizations for production builds
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        minimize: false, // Temporarily disable minification
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Only split vendor code
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+            },
+          },
+        },
+      };
     }
+    
+    // Fix for Windows file watching issues
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: /node_modules/,
+      };
+    }
+    
     return config;
   },
   
+  // Image optimization settings
   images: {
     domains: ['localhost', 'downxtown.com'],
     remotePatterns: [
@@ -24,14 +60,39 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Disable image optimization during build to save resources
+    unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  
+  // Disable type checking during build (handle separately)
   typescript: {
     ignoreBuildErrors: true,
   },
-  swcMinify: false,
+  
+  // Disable ESLint during build (handle separately)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // Experimental features for better Windows support
+  experimental: {
+    // Reduce memory usage
+    workerThreads: false,
+    cpus: 1,
+    // Disable build activity indicator which can cause issues
+    webpackBuildWorker: false,
+  },
+  
+  // Output configuration
+  output: 'standalone',
+  
+  // Reduce build output verbosity
+  productionBrowserSourceMaps: false,
+  
+  // Environment variables
+  env: {
+    NEXT_TELEMETRY_DISABLED: '1',
+  },
 };
 
 module.exports = nextConfig;

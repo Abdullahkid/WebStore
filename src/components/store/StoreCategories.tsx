@@ -21,49 +21,41 @@ const CategoryCard = ({ category, onClick }: CategoryCardProps) => {
   return (
     <div 
       onClick={onClick}
-      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border-0 hover:shadow-lg transition-all duration-200 cursor-pointer group p-4"
     >
-      {/* Category Image */}
-      <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-50">
-        {category.imageUrl ? (
-          <OptimizedImage
-            imageId={category.imageUrl}
-            alt={category.name}
-            variant="preview"
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#009CB9]/10 to-[#16DAFF]/10">
-            <Package className="w-12 h-12 text-[#009CB9]" />
-          </div>
-        )}
+      <div className="flex items-center">
+        {/* Category Image */}
+        <div className="relative w-16 h-16 overflow-hidden rounded-2xl bg-gray-50 flex-shrink-0">
+          {category.imageUrl ? (
+            <OptimizedImage
+              imageId={category.imageUrl}
+              alt={category.name}
+              variant="preview"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#009CB9]/10 to-[#16DAFF]/10">
+              <Package className="w-8 h-8 text-[#009CB9]" />
+            </div>
+          )}
+        </div>
         
-        {/* Product Count Badge */}
-        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-          {category.productCount}
-        </div>
-      </div>
-      
-      {/* Category Info */}
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-[#212121] text-base line-clamp-1">
-              {category.name}
-            </h3>
-            {category.description && (
-              <p className="text-sm text-[#757575] mt-1 line-clamp-2">
-                {category.description}
-              </p>
-            )}
-            <p className="text-sm text-[#009CB9] font-medium mt-1">
-              {category.productCount} {category.productCount === 1 ? 'product' : 'products'}
+        {/* Category Info */}
+        <div className="ml-4 flex-1 min-w-0">
+          <h3 className="font-bold text-[#212121] text-base line-clamp-1">
+            {category.name}
+          </h3>
+          {category.description && (
+            <p className="text-sm text-[#757575] mt-1 line-clamp-1">
+              {category.description}
             </p>
-          </div>
-          
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#009CB9] transition-colors ml-2 flex-shrink-0" />
+          )}
+          <p className="text-sm text-[#009CB9] font-medium mt-1">
+            {category.productCount} {category.productCount === 1 ? 'product' : 'products'}
+          </p>
         </div>
+        
+        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#009CB9] transition-colors ml-2 flex-shrink-0" />
       </div>
     </div>
   );
@@ -117,69 +109,66 @@ export default function StoreCategories({ storeId, initialData }: StoreCategorie
   }, [storeId, initialData]);
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-[#212121]">
-          Categories ({categories.length})
-        </h2>
-      </div>
-
+    <div className="bg-white">
       {/* Categories Grid */}
-      {categories.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                category={category} 
-                onClick={() => handleCategoryClick(category)}
-              />
+      <div className="px-4 py-4">
+        {categories.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-3">
+              {categories.map((category) => (
+                <CategoryCard 
+                  key={category.id} 
+                  category={category} 
+                  onClick={() => handleCategoryClick(category)}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasNext && (
+              <div className="flex justify-center pt-6">
+                <Button 
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  variant="outline"
+                  className="min-w-32 rounded-xl border-[#009CB9] text-[#009CB9] hover:bg-[#009CB9] hover:text-white"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        ) : loading ? (
+          // Loading skeleton
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div className="flex p-4">
+                  <div className="w-16 h-16 bg-gray-200 animate-pulse rounded-2xl" />
+                  <div className="ml-4 flex-1 space-y-2">
+                    <div className="h-5 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-
-          {/* Load More Button */}
-          {hasNext && (
-            <div className="flex justify-center pt-4">
-              <Button 
-                onClick={handleLoadMore}
-                disabled={loading}
-                variant="outline"
-                className="min-w-32"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  'Load More'
-                )}
-              </Button>
+        ) : (
+          // Empty state
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 bg-[#009CB9]/10 rounded-full flex items-center justify-center mb-4">
+              <Package className="w-8 h-8 text-[#009CB9]" />
             </div>
-          )}
-        </>
-      ) : loading ? (
-        // Loading skeleton
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border overflow-hidden">
-              <div className="aspect-square bg-gray-200 animate-pulse" />
-              <div className="p-4 space-y-2">
-                <div className="h-5 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
-                <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        // Empty state
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-2xl">🏷️</span>
+            <h3 className="text-xl font-bold text-[#212121] mb-2">No Categories Yet</h3>
+            <p className="text-[#757575] text-center">This store hasn't organized products into categories yet.</p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Categories Yet</h3>
-          <p className="text-gray-500">This store hasn't organized products into categories yet.</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

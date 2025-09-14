@@ -45,12 +45,12 @@ const RatingDistribution = ({ stats }: { stats: any }) => {
   const totalReviews = stats.totalReviews || 1;
   
   return (
-    <div className="bg-white rounded-lg border p-4 mb-4">
-      <div className="flex items-center gap-4 mb-4">
+    <div className="bg-white border-b border-gray-100 p-5 mb-1">
+      <div className="flex items-center gap-6">
         <div className="text-center">
           <div className="text-3xl font-bold text-[#212121]">{stats.averageRating?.toFixed(1) || '0.0'}</div>
           <StarRating rating={Math.round(stats.averageRating || 0)} />
-          <div className="text-sm text-gray-600 mt-1">{totalReviews} reviews</div>
+          <div className="text-sm text-[#757575] mt-1">{totalReviews} reviews</div>
         </div>
         
         <div className="flex-1">
@@ -59,16 +59,16 @@ const RatingDistribution = ({ stats }: { stats: any }) => {
             const percentage = (count / totalReviews) * 100;
             
             return (
-              <div key={rating} className="flex items-center gap-2 mb-1">
-                <span className="text-sm w-2">{rating}</span>
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <div key={rating} className="flex items-center gap-2 mb-1.5">
+                <span className="text-sm w-2 text-[#757575]">{rating}</span>
+                <Star className="w-3 h-3 fill-[#FFB000] text-[#FFB000]" />
                 <div className="flex-1 bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-yellow-400 h-2 rounded-full transition-all"
+                    className="bg-[#FFB000] h-2 rounded-full transition-all"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <span className="text-sm text-gray-600 w-8">{count}</span>
+                <span className="text-sm text-[#757575] w-8">{count}</span>
               </div>
             );
           })}
@@ -88,10 +88,10 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4 space-y-3">
+    <div className="bg-white border-b border-gray-100 p-5 space-y-3">
       {/* Review Header */}
       <div className="flex items-start gap-3">
-        <Avatar className="w-10 h-10">
+        <Avatar className="w-11 h-11">
           {review.customerAvatar ? (
             <AvatarImage 
               src={apiClient.getImageUrl(review.customerAvatar, 'preview')} 
@@ -105,25 +105,25 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-[#212121]">{review.customerName}</span>
+            <span className="font-bold text-[#212121]">{review.customerName}</span>
             {review.isVerifiedPurchase && (
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+              <Badge variant="outline" className="text-xs bg-[#4CAF50]/10 text-[#4CAF50] border-[#4CAF50]/20 rounded-xl">
                 <ShieldCheck className="w-3 h-3 mr-1" />
-                Verified Purchase
+                Verified
               </Badge>
             )}
           </div>
           
           <div className="flex items-center gap-2 mt-1">
             <StarRating rating={review.rating} />
-            <span className="text-sm text-gray-600">{formatDate(review.createdAt)}</span>
+            <span className="text-sm text-[#757575]">{formatDate(review.createdAt)}</span>
           </div>
         </div>
       </div>
       
       {/* Review Title */}
       {review.reviewTitle && (
-        <h4 className="font-medium text-[#212121]">{review.reviewTitle}</h4>
+        <h4 className="font-bold text-[#212121]">{review.reviewTitle}</h4>
       )}
       
       {/* Review Comment */}
@@ -133,7 +133,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
       {review.images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2">
           {review.images.map((imageId, index) => (
-            <div key={index} className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
+            <div key={index} className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden">
               <OptimizedImage
                 imageId={imageId}
                 alt={`Review image ${index + 1}`}
@@ -147,21 +147,21 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
       
       {/* Store Response */}
       {review.storeResponse && (
-        <div className="bg-gray-50 rounded-lg p-3 ml-8">
+        <div className="bg-[#F0F8FF] rounded-xl p-3 ml-8">
           <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium text-[#212121] text-sm">{review.storeResponse.responderName}</span>
-            <Badge variant="outline" className="text-xs">Store Response</Badge>
+            <span className="font-bold text-[#212121] text-sm">{review.storeResponse.responderName}</span>
+            <Badge variant="outline" className="text-xs bg-[#009CB9]/10 text-[#009CB9] border-[#009CB9]/20">Store Response</Badge>
           </div>
           <p className="text-sm text-[#212121]">{review.storeResponse.response}</p>
         </div>
       )}
       
       {/* Helpful Actions */}
-      <div className="flex items-center gap-4 pt-2 border-t">
+      <div className="flex items-center gap-4 pt-2">
         <Button
           variant="ghost"
           size="sm"
-          className="text-gray-600 hover:text-[#009CB9] p-2"
+          className="text-[#757575] hover:text-[#009CB9] p-2 h-auto rounded-xl"
         >
           <ThumbsUp className="w-4 h-4 mr-1" />
           Helpful ({review.helpfulCount})
@@ -224,12 +224,12 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
         // Handle case where response doesn't have expected structure
         console.log('Unexpected response structure:', response);
         setReviews([]);
-        setStats(null);
+        setStats(undefined);
       }
     } catch (error) {
       console.error('Failed to load reviews:', error);
       setReviews([]);
-      setStats(null);
+      setStats(undefined);
     } finally {
       setLoading(false);
     }
@@ -261,28 +261,33 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
   }, [storeId, initialData]);
 
   return (
-    <div className="space-y-4">
+    <div className="bg-white">
       {/* Stats and Filters */}
       {stats && <RatingDistribution stats={stats} />}
       
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-lg font-semibold text-[#212121]">
-          Reviews ({stats?.totalReviews || reviews.length || 0})
-        </h2>
+      <div className="flex justify-between items-center p-4 border-b border-gray-100">
+        <h3 className="font-bold text-[#212121] text-base">Reviews</h3>
         
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                {filterOptions.find(opt => opt.value === ratingFilter)?.label}
-                <ChevronDown className="w-4 h-4 ml-2" />
+              <Button variant="ghost" className="bg-[#757575]/8 hover:bg-[#757575]/15 rounded-2xl px-3 py-2 h-auto">
+                <span className="text-xs text-[#757575] font-medium mr-1.5">
+                  {filterOptions.find(opt => opt.value === ratingFilter)?.label}
+                </span>
+                <ChevronDown className="w-4 h-4 text-[#757575]" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className="rounded-xl">
               {filterOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.label}
                   onClick={() => handleFilterChange(option.value)}
+                  className={`rounded-lg text-sm ${
+                    ratingFilter === option.value 
+                      ? 'bg-[#009CB9]/10 text-[#009CB9] font-semibold' 
+                      : 'text-[#212121]'
+                  }`}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -292,16 +297,23 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                {sortOptions.find(opt => opt.value === sortBy)?.label}
-                <ChevronDown className="w-4 h-4 ml-2" />
+              <Button variant="ghost" className="bg-[#757575]/8 hover:bg-[#757575]/15 rounded-2xl px-3 py-2 h-auto">
+                <span className="text-xs text-[#757575] font-medium mr-1.5">
+                  {sortOptions.find(opt => opt.value === sortBy)?.label}
+                </span>
+                <ChevronDown className="w-4 h-4 text-[#757575]" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className="rounded-xl">
               {sortOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
                   onClick={() => handleSortChange(option.value)}
+                  className={`rounded-lg text-sm ${
+                    sortBy === option.value 
+                      ? 'bg-[#009CB9]/10 text-[#009CB9] font-semibold' 
+                      : 'text-[#212121]'
+                  }`}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -312,69 +324,71 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
       </div>
 
       {/* Reviews List */}
-      {reviews.length > 0 ? (
-        <>
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
-          </div>
-
-          {/* Load More Button */}
-          {hasNextPage && (
-            <div className="flex justify-center pt-4">
-              <Button 
-                onClick={handleLoadMore}
-                disabled={loading}
-                variant="outline"
-                className="min-w-32"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  'Load More Reviews'
-                )}
-              </Button>
+      <div>
+        {reviews.length > 0 ? (
+          <>
+            <div className="">
+              {reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
             </div>
-          )}
-        </>
-      ) : loading ? (
-        // Loading skeleton
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border p-4">
-              <div className="flex gap-3 mb-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-                  <div className="h-3 bg-gray-200 rounded w-1/3 animate-pulse" />
+
+            {/* Load More Button */}
+            {hasNextPage && (
+              <div className="flex justify-center p-6">
+                <Button 
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  variant="outline"
+                  className="min-w-32 rounded-xl border-[#009CB9] text-[#009CB9] hover:bg-[#009CB9] hover:text-white"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Load More Reviews'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        ) : loading ? (
+          // Loading skeleton
+          <div className="">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="border-b border-gray-100 p-5">
+                <div className="flex gap-3 mb-3">
+                  <div className="w-11 h-11 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+                    <div className="h-3 bg-gray-200 rounded w-1/3 animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
-                <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-              </div>
+            ))}
+          </div>
+        ) : (
+          // Empty state
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 bg-[#009CB9]/10 rounded-full flex items-center justify-center mb-4">
+              <Star className="w-8 h-8 text-[#009CB9]" />
             </div>
-          ))}
-        </div>
-      ) : (
-        // Empty state
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-2xl">⭐</span>
+            <h3 className="text-xl font-bold text-[#212121] mb-2">No Reviews Yet</h3>
+            <p className="text-[#757575] text-center mb-4">Be the first to review this store!</p>
+            {/* Debug info */}
+            <div className="text-xs text-gray-400 bg-gray-50 p-3 rounded mt-4">
+              <p>Store ID: {storeId}</p>
+              <p>Initial data: {initialData ? 'provided' : 'none'}</p>
+              <p>Stats: {stats ? JSON.stringify(stats) : 'none'}</p>
+              <p>Loading: {loading.toString()}</p>
+            </div>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
-          <p className="text-gray-500 mb-4">Be the first to review this store!</p>
-          {/* Debug info */}
-          <div className="text-xs text-gray-400 bg-gray-50 p-3 rounded mt-4">
-            <p>Store ID: {storeId}</p>
-            <p>Initial data: {initialData ? 'provided' : 'none'}</p>
-            <p>Stats: {stats ? JSON.stringify(stats) : 'none'}</p>
-            <p>Loading: {loading.toString()}</p>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

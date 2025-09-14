@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Share2, Phone, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { STORE_TABS } from '@/lib/constants';
 import StoreHeader from './StoreHeader';
 import StoreProducts from './StoreProducts';
@@ -33,7 +34,7 @@ export default function StoreProfilePage({
   storeId,
   error,
 }: StoreProfilePageProps) {
-  const [activeTab, setActiveTab] = useState(STORE_TABS.PRODUCTS);
+  const [activeTab, setActiveTab] = useState<string>(STORE_TABS.PRODUCTS);
 
   if (error) {
     return (
@@ -53,72 +54,80 @@ export default function StoreProfilePage({
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F8FF]">
+    <div className="min-h-screen gradient-surface">
       {/* App CTA Banner - Fixed at top */}
       <AppCTABanner storeData={storeData} />
-      
+
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 pt-4">
-        {/* Store Header - Instagram Style */}
-        <StoreHeader storeData={storeData} />
+      <div className="max-w-7xl mx-auto">
+        {/* Store Header */}
+        <div className="shadow-soft">
+          <StoreHeader storeData={storeData} />
+        </div>
+
+        {/* Modern Navigation Tabs - Redesigned */}
+        <div className="glass-card border-0 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-lg">
+          <div className="flex overflow-x-auto no-scrollbar px-4">
+            {[
+              { key: STORE_TABS.PRODUCTS, label: 'Products', icon: '🛍️', count: storeData.productsCount },
+              { key: STORE_TABS.CATEGORIES, label: 'Categories', icon: '📂' },
+              { key: STORE_TABS.REVIEWS, label: 'Reviews', icon: '⭐' },
+              { key: STORE_TABS.ABOUT, label: 'About', icon: 'ℹ️' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-3 px-6 py-5 whitespace-nowrap font-semibold text-sm transition-all duration-300 border-b-3 hover-lift ${
+                  activeTab === tab.key
+                    ? 'border-primary text-primary bg-primary/5 shadow-soft rounded-t-xl'
+                    : 'border-transparent text-slate-600 hover:text-primary hover:bg-slate-50/50'
+                }`}
+              >
+                <span className="text-lg">{tab.icon}</span>
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                    activeTab === tab.key
+                      ? 'gradient-primary text-white shadow-brand'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
         
-        {/* Navigation Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="w-full grid grid-cols-4 bg-white rounded-lg shadow-sm border">
-            <TabsTrigger 
-              value={STORE_TABS.PRODUCTS}
-              className="data-[state=active]:bg-[#009CB9]/10 data-[state=active]:text-[#009CB9] font-medium"
-            >
-              Products
-            </TabsTrigger>
-            <TabsTrigger 
-              value={STORE_TABS.CATEGORIES}
-              className="data-[state=active]:bg-[#009CB9]/10 data-[state=active]:text-[#009CB9] font-medium"
-            >
-              Categories
-            </TabsTrigger>
-            <TabsTrigger 
-              value={STORE_TABS.REVIEWS}
-              className="data-[state=active]:bg-[#009CB9]/10 data-[state=active]:text-[#009CB9] font-medium"
-            >
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger 
-              value={STORE_TABS.ABOUT}
-              className="data-[state=active]:bg-[#009CB9]/10 data-[state=active]:text-[#009CB9] font-medium"
-            >
-              About
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Tab Contents */}
-          <div className="mt-6">
-            <TabsContent value={STORE_TABS.PRODUCTS} className="space-y-6">
-              <StoreProducts 
+        {/* Tab Contents */}
+        <div className="px-4 py-8">
+          <div className="animate-fade-in">
+            {activeTab === STORE_TABS.PRODUCTS && (
+              <StoreProducts
                 storeId={storeId}
                 initialData={initialProductsData}
               />
-            </TabsContent>
-            
-            <TabsContent value={STORE_TABS.CATEGORIES} className="space-y-6">
-              <StoreCategories 
+            )}
+
+            {activeTab === STORE_TABS.CATEGORIES && (
+              <StoreCategories
                 storeId={storeId}
                 initialData={initialCategoriesData}
               />
-            </TabsContent>
-            
-            <TabsContent value={STORE_TABS.REVIEWS} className="space-y-6">
-              <StoreReviews 
+            )}
+
+            {activeTab === STORE_TABS.REVIEWS && (
+              <StoreReviews
                 storeId={storeId}
                 initialData={initialReviewsData}
               />
-            </TabsContent>
-            
-            <TabsContent value={STORE_TABS.ABOUT} className="space-y-6">
+            )}
+
+            {activeTab === STORE_TABS.ABOUT && (
               <StoreAbout storeData={storeData} />
-            </TabsContent>
+            )}
           </div>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
