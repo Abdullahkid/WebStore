@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronDown, Star, IndianRupee, RefreshCw, Package, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import OptimizedImage from '@/components/shared/OptimizedImage';
-import ProductDetailModal from '@/components/product/ProductDetailModal';
 import { apiClient } from '@/lib/api/client';
 import { SORT_OPTIONS } from '@/lib/constants';
 import type { StoreProductsResponse, MiniProduct, StoreSortOption } from '@/lib/types';
@@ -110,25 +110,16 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 };
 
 export default function StoreProducts({ storeId, initialData }: StoreProductsProps) {
+  const router = useRouter();
   const [products, setProducts] = useState<MiniProduct[]>(initialData?.products || []);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialData?.currentPage || 1);
   const [totalPages, setTotalPages] = useState(initialData?.totalPages || 1);
   const [sortBy, setSortBy] = useState<StoreSortOption>('RECENT');
   const [hasNextPage, setHasNextPage] = useState(initialData?.hasNextPage || false);
-  
-  // Product detail modal state
-  const [selectedProduct, setSelectedProduct] = useState<MiniProduct | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleProductClick = (product: MiniProduct) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
+    router.push(`/product/${product.id}`);
   };
 
   const sortOptions = [
@@ -285,13 +276,6 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
           </div>
         )}
       </div>
-
-      {/* Product Detail Modal */}
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </div>
   );
 }

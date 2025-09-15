@@ -52,7 +52,7 @@ export default function StoreHeader({ storeData }: StoreHeaderProps) {
   return (
     <div className="relative">
       {/* Store Banner Section */}
-      <div className="relative h-56 md:h-72 gradient-primary overflow-hidden">
+      <div className="relative h-56 md:h-72 gradient-primary">
         {/* Modern Banner Pattern */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-black/5"></div>
@@ -86,7 +86,7 @@ export default function StoreHeader({ storeData }: StoreHeaderProps) {
         </div>
         
         {/* Store Logo - Enhanced positioning and styling */}
-        <div className="absolute bottom-0 left-8 transform translate-y-1/3">
+        <div className="absolute bottom-0 left-8 transform translate-y-1/3 z-20">
           <div className="relative">
             <div className="w-36 h-36 md:w-44 md:h-44 rounded-3xl shadow-premium border-2 border-white/50 overflow-hidden bg-white hover-lift">
               {storeData.storeLogo ? (
@@ -114,7 +114,7 @@ export default function StoreHeader({ storeData }: StoreHeaderProps) {
       </div>
       
       {/* Store Info Section */}
-      <div className="gradient-surface px-8 pt-24 pb-8">
+      <div className="gradient-surface px-8 pt-28 md:pt-32 pb-8">
         {/* Store Name & Category */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-4">
