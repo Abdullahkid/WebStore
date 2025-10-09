@@ -17,6 +17,15 @@ const config: Config = {
         "2xl": "1400px",
       },
     },
+    screens: {
+      'xs': '475px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px',
+    },
     extend: {
       fontFamily: {
         sans: ["var(--font-archivo)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
@@ -85,6 +94,17 @@ const config: Config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      maxWidth: {
+        '8xl': '1440px',
+        '9xl': '1600px',
+        'screen-3xl': '1920px',
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '26': '6.5rem',
+        '30': '7.5rem',
       },
     },
   },

@@ -284,10 +284,142 @@
   .logo-contain {
     object-fit: contain !important;
   }
-  
+
   /* Override inline styles for optimized images */
   img.logo-contain {
     object-fit: contain !important;
+  }
+
+  /* Desktop-only utilities */
+  @media (max-width: 1023px) {
+    .desktop-only {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-only {
+      display: none !important;
+    }
+  }
+
+  /* Enhanced desktop hover effects */
+  @media (min-width: 1024px) {
+    .hover-scale-desktop:hover {
+      transform: scale(1.05);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-shadow-desktop:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-lift-desktop:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  /* Desktop sticky sidebar */
+  .desktop-sticky {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+  }
+
+  /* Desktop container layouts */
+  .desktop-container {
+    @apply mx-auto px-6 lg:px-12 xl:px-16 2xl:px-20;
+    max-width: 1600px;
+  }
+
+  .desktop-container-wide {
+    @apply mx-auto px-6 lg:px-12 xl:px-20 2xl:px-24;
+    max-width: 1920px;
+  }
+
+  /* Enhanced desktop grid */
+  .desktop-grid-products {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-grid-products {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .desktop-grid-products {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .desktop-grid-products {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  /* Desktop typography enhancements */
+  @media (min-width: 1024px) {
+    .desktop-heading-hero {
+      @apply text-5xl xl:text-6xl 2xl:text-7xl;
+    }
+
+    .desktop-heading-1 {
+      @apply text-4xl xl:text-5xl;
+    }
+
+    .desktop-heading-2 {
+      @apply text-3xl xl:text-4xl;
+    }
+
+    .desktop-heading-3 {
+      @apply text-2xl xl:text-3xl;
+    }
+  }
+
+  /* Enhanced scrollbar for desktop */
+  @media (min-width: 1024px) {
+    .desktop-scrollbar::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .desktop-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .desktop-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .desktop-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  }
+
+  /* Image zoom effect for desktop */
+  @media (min-width: 1024px) {
+    .image-zoom-container {
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+    .image-zoom-container img {
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .image-zoom-container:hover img {
+      transform: scale(1.1);
+    }
   }
 }
 

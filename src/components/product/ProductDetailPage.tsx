@@ -19,12 +19,13 @@ import {
   MapPin
 } from 'lucide-react';
 import OptimizedImage from '@/components/shared/OptimizedImage';
-import { 
-  ProductPageDetailsDto, 
-  ProductVariantPageDto, 
+import ImageLightbox from '@/components/shared/ImageLightbox';
+import {
+  ProductPageDetailsDto,
+  ProductVariantPageDto,
   StoreProfileMiniDto,
   ImageGroup,
-  ImageGroupType 
+  ImageGroupType
 } from '@/lib/types';
 import { showToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   // Fetch product details
   useEffect(() => {
@@ -300,12 +303,17 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     ? Math.round(((currentPrice.mrp - currentPrice.selling) / currentPrice.mrp) * 100)
     : 0;
 
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="desktop-container-wide">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             <Button
               variant="ghost"
               size="sm"
@@ -341,29 +349,33 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-16">
-          {/* Product Images */}
-          <div className="mb-8 lg:mb-0">
-            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-200/50">
+      <div className="desktop-container-wide py-6 lg:py-10">
+        {/* Desktop 3-Column Layout: Image Gallery | Product Info | Store Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Product Images - 5 columns on desktop */}
+          <div className="lg:col-span-5 xl:col-span-5">
+            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-200/50 sticky top-24">
               {/* Main Image */}
-              <div className="aspect-square mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 group">
+              <div
+                className="aspect-square mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 cursor-pointer image-zoom-container"
+                onClick={() => openLightbox(selectedImageIndex)}
+              >
                 <OptimizedImage
                   imageId={currentImages[selectedImageIndex] || ''}
                   alt={product.title}
                   variant="detail"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover"
                 />
               </div>
 
               {/* Image Thumbnails */}
               {currentImages.length > 1 && (
-                <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide desktop-scrollbar">
                   {currentImages.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
+                      className={`flex-shrink-0 w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
                         selectedImageIndex === index
                           ? 'border-blue-500 shadow-lg scale-105'
                           : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
@@ -382,8 +394,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             </div>
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-8">
+          {/* Product Info - 5 columns on desktop */}
+          <div className="lg:col-span-5 xl:col-span-5 space-y-6 lg:space-y-8">
             {/* Title and Brand */}
             <div>
               {product.brandName && (
@@ -393,7 +405,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                   </p>
                 </div>
               )}
-              <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 mb-4 leading-tight">
                 {product.title}
               </h1>
 
@@ -581,9 +593,67 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               </div>
             </div>
           </div>
+
+          {/* Store Info Sidebar - 2 columns on desktop, hidden on mobile */}
+          <div className="hidden lg:block lg:col-span-2 xl:col-span-2">
+            <div className="desktop-sticky bg-white rounded-3xl p-8 shadow-xl border border-slate-200/50">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6">Store Information</h3>
+
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  {product.storeInfo.storeLogo ? (
+                    <OptimizedImage
+                      imageId={product.storeInfo.storeLogo}
+                      alt={product.storeInfo.storeName}
+                      variant="preview"
+                      className="w-20 h-20 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <Store className="w-10 h-10 text-slate-400" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xl font-bold text-slate-900 mb-1 truncate">{product.storeInfo.storeName}</h4>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                      <Star className="w-5 h-5 text-amber-400 fill-current mr-1.5" />
+                      <span className="text-base font-semibold text-amber-700">{product.storeInfo.formattedRating}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="font-semibold text-slate-700 text-lg">Products</span>
+                  <span className="font-bold text-slate-900 text-lg">{product.storeInfo.productsCount}</span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="font-semibold text-slate-700 text-lg">Followers</span>
+                  <span className="font-bold text-slate-900 text-lg">{product.storeInfo.followersCount}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Button
+                  onClick={() => router.push(`/store/${product.storeInfo.businessId}`)}
+                  className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-lg rounded-xl transition-all duration-200 hover:shadow-xl hover-lift-desktop"
+                >
+                  <Store className="w-6 h-6 mr-3" />
+                  Visit Store
+                </Button>
+                <Button
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 hover:shadow-xl hover-lift-desktop"
+                >
+                  <MessageCircle className="w-6 h-6 mr-3" />
+                  Chat with Store
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Product Details */}
+        {/* Product Details - Full width below fold */}
         <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Description and Features */}
           <div className="lg:col-span-2 space-y-8">
@@ -624,13 +694,13 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             )}
           </div>
 
-          {/* Store Info */}
-          <div>
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200/50 sticky top-24">
+          {/* Store Info - Mobile Only (shows below on small screens) */}
+          <div className="lg:hidden">
+            <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-200/50">
               <h3 className="text-xl font-bold text-slate-900 mb-6">Store Information</h3>
 
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center flex-shrink-0">
                   {product.storeInfo.storeLogo ? (
                     <OptimizedImage
                       imageId={product.storeInfo.storeLogo}
@@ -642,8 +712,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                     <Store className="w-8 h-8 text-slate-400" />
                   )}
                 </div>
-                <div>
-                  <h4 className="text-lg font-bold text-slate-900">{product.storeInfo.storeName}</h4>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-lg font-bold text-slate-900 truncate">{product.storeInfo.storeName}</h4>
                   <div className="flex items-center space-x-2 mt-1">
                     <div className="flex items-center bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
                       <Star className="w-4 h-4 text-amber-400 fill-current mr-1" />
@@ -683,6 +753,15 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        images={currentImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        productTitle={product.title}
+      />
     </div>
   );
 }

@@ -33,11 +33,11 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 
   return (
     <div
-      className="group bg-white rounded-xl border border-[#E0E0E0] hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer overflow-hidden"
+      className="group bg-white rounded-lg lg:rounded-xl border-0 sm:border sm:border-[#E0E0E0] hover:shadow-2xl lg:hover:scale-[1.05] transition-all duration-300 cursor-pointer overflow-hidden hover-lift-desktop"
       onClick={() => onProductClick(product)}
     >
-      {/* Product Image */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F5F5]">
+      {/* Product Image - Square Aspect Ratio */}
+      <div className="relative aspect-square overflow-hidden bg-[#F5F5F5]">
         <OptimizedImage
           imageId={product.mainImageUrl}
           alt={product.name}
@@ -47,8 +47,8 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1440px) 25vw, 20vw"
         />
 
-        {/* Discount Badge */}
-        {discountPercentage > 0 && (
+        {/* Discount Badge - Only show if discount is 5% or more */}
+        {discountPercentage >= 5 && (
           <div className="absolute top-3 left-3 bg-[#F44336] text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-md">
             {discountPercentage}% OFF
           </div>
@@ -61,63 +61,51 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
               e.stopPropagation();
               setIsWishlisted(!isWishlisted);
             }}
-            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
+            // className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
           >
-            <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-[#F44336] text-[#F44336]' : 'text-[#757575]'}`} />
+            {/* <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-[#F44336] text-[#F44336]' : 'text-[#757575]'}`} /> */}
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onProductClick(product);
             }}
-            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
+            //className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
           >
-            <Eye className="w-5 h-5 text-[#757575]" />
+            {/* <Eye className="w-5 h-5 text-[#757575]" /> */}
           </button>
         </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-4">
+      {/* Product Info - Responsive padding and text sizes */}
+      <div className="p-2 sm:p-4">
         {/* Product Name */}
-        <h3 className="font-medium text-[#212121] line-clamp-2 text-base mb-2 leading-snug group-hover:text-[#00838F] transition-colors">
+        <h3 className="font-medium text-[#212121] line-clamp-2 text-sm sm:text-base mb-1 sm:mb-2 leading-snug group-hover:text-[#00838F] transition-colors">
           {product.name}
         </h3>
 
         {/* Price Section */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="text-xl font-bold text-[#00838F]">
+        <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <div className="text-base sm:text-xl font-bold text-[#00838F]">
             ₹{Math.round(product.sellingPrice).toLocaleString('en-IN')}
           </div>
 
           {product.mrp && product.mrp > product.sellingPrice && (
-            <div className="text-sm text-[#9E9E9E] line-through">
+            <div className="text-xs sm:text-sm text-[#9E9E9E] line-through">
               ₹{Math.round(product.mrp).toLocaleString('en-IN')}
             </div>
           )}
         </div>
 
-        {/* Rating */}
-        {product.averageRating && product.averageRating > 0 && (
-          <div className="flex items-center gap-1 mb-3">
-            <Star className="w-4 h-4 fill-[#FFC107] text-[#FFC107]" />
-            <span className="text-sm font-medium text-[#212121]">
-              {product.averageRating.toFixed(1)}
+        {/* Rating - Only show if rating exists and is greater than 0 */}
+        {(product.averageRating ?? 0) > 0 && (
+          <div className="flex items-center gap-1">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-[#FFC107] text-[#FFC107]" />
+            <span className="text-xs sm:text-sm font-medium text-[#212121]">
+              {product.averageRating!.toFixed(1)}
             </span>
           </div>
         )}
-
-        {/* Action Button */}
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            onProductClick(product);
-          }}
-          className="w-full bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-lg h-9 text-sm font-medium"
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          Add to Cart
-        </Button>
       </div>
     </div>
   );
@@ -186,36 +174,36 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
   }, [storeId, initialData]);
 
   return (
-    <div className="bg-white">
-      {/* Filter Bar */}
-      <div className="border-b border-[#E0E0E0] px-6 py-5">
+    <div className="bg-white lg:rounded-2xl lg:shadow-lg lg:border lg:border-[#E0E0E0]">
+      {/* Filter Bar - Desktop Only */}
+      <div className="hidden lg:block border-b border-[#E0E0E0] px-8 py-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#212121]">Products</h2>
-            <p className="text-sm text-[#757575] mt-1">
+            <h2 className="text-3xl font-bold text-[#212121]">Products</h2>
+            <p className="text-base text-[#757575] mt-1">
               {products.length} items available
             </p>
           </div>
 
-          {/* Sort Dropdown */}
+          {/* Sort Dropdown - Desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="border-[#E0E0E0] text-[#757575] hover:border-[#00BCD4] hover:text-[#00838F] rounded-lg px-4 h-10"
+                className="border-[#E0E0E0] text-[#757575] hover:border-[#00BCD4] hover:text-[#00838F] rounded-lg px-6 h-12 text-base font-medium shadow-sm hover:shadow-md transition-all"
               >
-                <span className="text-sm mr-2">
+                <span className="mr-2">
                   {sortOptions.find(opt => opt.value === sortBy)?.label}
                 </span>
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-lg border-[#E0E0E0]">
+            <DropdownMenuContent align="end" className="w-64 rounded-lg border-[#E0E0E0] shadow-xl">
               {sortOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
                   onClick={() => handleSortChange(option.value as StoreSortOption)}
-                  className={`rounded-md text-sm py-2.5 px-3 m-1 cursor-pointer ${
+                  className={`rounded-md text-base py-3 px-4 m-1 cursor-pointer transition-all ${
                     sortBy === option.value
                       ? 'bg-[#E0F7FA] text-[#00838F] font-semibold'
                       : 'text-[#212121] hover:bg-[#F5F5F5]'
@@ -229,24 +217,56 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
         </div>
       </div>
 
-      {/* Products Grid - Blueprint Responsive Breakpoints */}
-      <div className="px-6 py-8">
+      {/* Compact Sort Bar - Mobile Only */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-[#E0E0E0] px-2 py-2 flex items-center justify-between">
+        <span className="text-sm text-[#757575] font-medium">{products.length} products</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#E0E0E0] text-[#757575] hover:border-[#00BCD4] hover:text-[#00838F] rounded-md px-3 h-8 text-xs font-medium"
+            >
+              <span className="mr-1">Sort</span>
+              <ChevronDown className="w-3 h-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-lg border-[#E0E0E0] shadow-xl">
+            {sortOptions.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() => handleSortChange(option.value as StoreSortOption)}
+                className={`rounded-md text-sm py-2 px-3 m-1 cursor-pointer transition-all ${
+                  sortBy === option.value
+                    ? 'bg-[#E0F7FA] text-[#00838F] font-semibold'
+                    : 'text-[#212121] hover:bg-[#F5F5F5]'
+                }`}
+              >
+                {option.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Products Grid - Maximum Space on Mobile */}
+      <div className="px-1 sm:px-2 lg:px-6 py-2 sm:py-4 lg:py-8">
         {products.length > 0 ? (
           <>
-            {/* Grid: 1 col (mobile), 2 cols (tablet), 3 cols (desktop), 4 cols (large) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* Responsive Grid: Mobile 2 cols → Tablet 2 cols → Desktop 3 cols → XL 4 cols */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-6 lg:gap-8">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} onProductClick={handleProductClick} />
               ))}
             </div>
 
-            {/* Load More Button */}
+            {/* Load More Button - Enhanced Desktop */}
             {hasNextPage && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-10 lg:mt-12">
                 <Button
                   onClick={handleLoadMore}
                   disabled={loading}
-                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-full px-8 h-12 font-medium text-base"
+                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-full px-10 lg:px-12 h-12 lg:h-14 font-semibold text-base lg:text-lg hover-lift-desktop"
                 >
                   {loading ? (
                     <>
@@ -261,11 +281,11 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
             )}
           </>
         ) : loading ? (
-          // Loading Skeleton
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          // Loading Skeleton - Optimized for all screens
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-6 lg:gap-8">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-white rounded-xl border border-[#E0E0E0] overflow-hidden">
-                <div className="aspect-[3/4] bg-gradient-to-br from-[#E0E0E0] to-[#F5F5F5] animate-pulse" />
+                <div className="aspect-square bg-gradient-to-br from-[#E0E0E0] to-[#F5F5F5] animate-pulse" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-[#E0E0E0] rounded animate-pulse" />
                   <div className="h-3 bg-[#E0E0E0] rounded w-3/4 animate-pulse" />

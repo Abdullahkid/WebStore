@@ -81,6 +81,13 @@ const nextConfig = {
     cpus: 1,
     // Disable build activity indicator which can cause issues
     webpackBuildWorker: false,
+    // Disable Jest worker to prevent child process exceptions
+    isrMemoryCacheSize: 0,
+  },
+
+  // Disable static page generation workers
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
   },
   
   // Output configuration
