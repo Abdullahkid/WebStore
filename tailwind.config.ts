@@ -19,8 +19,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
-        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "SFMono-Regular"],
+        sans: ["var(--font-archivo)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

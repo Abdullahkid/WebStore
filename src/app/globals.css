@@ -9,7 +9,7 @@
   --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  --primary: 198 88% 40%;
+  --primary: 188 100% 42%;
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 98%;
   --secondary-foreground: 222.2 47.4% 11.2%;
@@ -17,26 +17,46 @@
   --muted-foreground: 220 9% 46%;
   --accent: 220 13% 96%;
   --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 4 90% 58%;
   --destructive-foreground: 210 40% 98%;
   --border: 220 13% 91%;
   --input: 220 13% 91%;
-  --ring: 198 88% 40%;
+  --ring: 188 100% 42%;
   --radius: 0.75rem;
 
-  /* Modern brand colors */
-  --brand-primary: 198 88% 40%;
-  --brand-secondary: 195 100% 55%;
-  --brand-accent: 210 100% 97%;
-  --brand-muted: 220 13% 96%;
-  --brand-surface: 0 0% 100%;
+  /* Blueprint Brand Colors */
+  --primary-white: #FFFFFF;
+  --accent-cyan-500: #00BCD4;
+  --accent-cyan-600: #0097A7;
+  --accent-cyan-700: #00838F;
+  --error-red: #F44336;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-muted: #9E9E9E;
+  --border-light: #E0E0E0;
+  --bg-light-cyan: #E0F7FA;
+  --bg-light: #F5F5F5;
 
-  /* Enhanced shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Enhanced Shadows (Blueprint) */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
+  --shadow-brand: 0 4px 12px rgba(0, 188, 212, 0.3);
+
+  /* Spacing (Blueprint) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius (Blueprint) */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 50%;
 
   /* Glass morphism */
   --glass-bg: rgba(255, 255, 255, 0.8);
@@ -72,11 +92,11 @@
   }
   body {
     @apply bg-slate-50 text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    font-variation-settings: "opsz" 32;
+    font-family: var(--font-archivo), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+    font-family: var(--font-archivo), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   h1 {
     @apply text-3xl lg:text-4xl;
@@ -226,9 +246,9 @@
     transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Modern gradient backgrounds */
+  /* Modern gradient backgrounds (Blueprint) */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--brand-primary)) 0%, hsl(var(--brand-secondary)) 100%);
+    background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
   }
 
   .gradient-surface {
@@ -237,6 +257,27 @@
 
   .gradient-subtle {
     background: linear-gradient(135deg, #fefefe 0%, #f1f5f9 100%);
+  }
+
+  /* Blueprint-specific utilities */
+  .shadow-brand-soft {
+    box-shadow: 0 4px 14px 0 rgba(0, 188, 212, 0.15);
+  }
+
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-200 {
+    transition: all 200ms ease;
+  }
+
+  .transition-300 {
+    transition: all 300ms ease;
+  }
+
+  .transition-400 {
+    transition: all 400ms ease;
   }
   
   /* Force object-contain for logo images */
@@ -261,6 +302,14 @@
 
 .border-brand-primary {
   border-color: #009CB9;
+}
+
+.text-brand-primary {
+  color: #009CB9;
+}
+
+.text-brand-secondary {
+  color: #16DAFF;
 }
 
 .brand-accent {

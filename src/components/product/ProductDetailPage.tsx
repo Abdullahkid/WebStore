@@ -13,70 +13,24 @@ import {
   Store,
   Plus,
   Minus,
-  ShoppingBag,
   ChevronRight,
   Check,
   Clock,
   MapPin
 } from 'lucide-react';
 import OptimizedImage from '@/components/shared/OptimizedImage';
+import { 
+  ProductPageDetailsDto, 
+  ProductVariantPageDto, 
+  StoreProfileMiniDto,
+  ImageGroup,
+  ImageGroupType 
+} from '@/lib/types';
+import { showToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-
-interface ProductPageDetailsDto {
-  id: string;
-  title: string;
-  brandName?: string;
-  description: string;
-  keyFeatures: string[];
-  defaultImages: string[];
-  images: string[];
-  mrp?: number;
-  sellingPrice: number;
-  variants: ProductVariantPageDto[];
-  variantAttributes: Record<string, string[]>;
-  hasVariants: boolean;
-  totalInventory: number;
-  isAvailable: boolean;
-  customAttributes: Record<string, string>;
-  isReturnable: boolean;
-  isCodAllowed: boolean;
-  estimatedDeliveryDays?: { minDays: number; maxDays: number };
-  shippingCost?: { local: number; national: number };
-  averageRating: number;
-  totalReviews: number;
-  storeInfo: StoreProfileMiniDto;
-  discountPercentage: number;
-  formattedPrice: string;
-  formattedMrp?: string;
-}
-
-interface ProductVariantPageDto {
-  variantId: string;
-  attributes: Record<string, string>;
-  images: string[];
-  useProductImages: boolean;
-  mrp?: number;
-  sellingPrice: number;
-  inventory: number;
-  sku?: string;
-  status: string;
-}
-
-interface StoreProfileMiniDto {
-  businessId: string;
-  storeName: string;
-  storeUsername: string;
-  storeType: string;
-  storeLogo?: string;
-  storeCategory: string;
-  storeRating: number;
-  productsCount: number;
-  followersCount: number;
-  formattedRating: string;
-}
 
 interface ProductDetailPageProps {
   productId: string;
@@ -91,20 +45,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    // Simple toast implementation - you can replace with your preferred toast library
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
-      type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      document.body.removeChild(toast);
-    }, 3000);
-  };
 
   // Fetch product details
   useEffect(() => {
@@ -168,7 +108,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const getCurrentImages = () => {
     if (!product) return [];
     
-    // If variant is selected and has specific images
+    // ImageGroup-aware image resolution logic
+    // Priority: Variant-specific ImageGroup > Variant legacy images > Product ImageGroups > Product legacy images
+    
+    // If variant is selected, try to get images from ImageGroup or fallback to legacy
     if (Object.keys(selectedVariant).length > 0) {
       const matchingVariant = product.variants.find(variant => 
         Object.entries(selectedVariant).every(([key, value]) => 
@@ -176,12 +119,40 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         )
       );
       
-      if (matchingVariant && matchingVariant.images.length > 0 && !matchingVariant.useProductImages) {
-        return matchingVariant.images;
+      if (matchingVariant) {
+        // Try ImageGroup first (new system)
+        if (matchingVariant.imageGroupId) {
+          const imageGroup = product.imageGroups?.find(group => group.id === matchingVariant.imageGroupId);
+          if (imageGroup && imageGroup.images.length > 0) {
+            return imageGroup.images;
+          }
+        }
+        
+        // Fallback to legacy variant images
+        if (matchingVariant.images.length > 0 && !matchingVariant.useProductImages) {
+          return matchingVariant.images;
+        }
       }
     }
     
-    // Default to product images
+    // Product-level image resolution with ImageGroup support
+    // Try PRODUCT_WIDE ImageGroups first
+    if (product.imageGroups && product.imageGroups.length > 0) {
+      const productWideGroup = product.imageGroups.find(group => 
+        group.groupType === ImageGroupType.PRODUCT_WIDE
+      );
+      if (productWideGroup && productWideGroup.images.length > 0) {
+        return productWideGroup.images;
+      }
+      
+      // Fallback to any available ImageGroup
+      const firstGroupWithImages = product.imageGroups.find(group => group.images.length > 0);
+      if (firstGroupWithImages) {
+        return firstGroupWithImages.images;
+      }
+    }
+    
+    // Final fallback to legacy product images
     return product.defaultImages.length > 0 ? product.defaultImages : product.images;
   };
 
@@ -243,24 +214,28 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
   };
 
-  const handleAddToCart = () => {
-    if (product?.hasVariants && Object.keys(selectedVariant).length !== Object.keys(product.variantAttributes).length) {
-      showToast('Please select all product options', 'error');
-      return;
-    }
-    
-    // Implement add to cart logic
-    showToast('Added to cart successfully!');
-  };
-
   const handleBuyNow = () => {
     if (product?.hasVariants && Object.keys(selectedVariant).length !== Object.keys(product.variantAttributes).length) {
       showToast('Please select all product options', 'error');
       return;
     }
     
-    // Navigate to checkout or implement buy now logic
+    // Check if user is authenticated
+    // For MVP, we'll assume user is not authenticated and redirect to registration
+    // In production, you would check authentication state here
+    const isAuthenticated = false; // TODO: Replace with actual auth check
+    
+    if (!isAuthenticated) {
+      // Redirect to registration with return path
+      const returnPath = window.location.pathname;
+      router.push(`/register?redirect=${encodeURIComponent(returnPath)}`);
+      showToast('Please create an account to continue shopping');
+      return;
+    }
+    
+    // If authenticated, proceed to checkout
     showToast('Proceeding to checkout...');
+    // TODO: Implement checkout logic
   };
 
   const handleShare = async () => {
@@ -536,19 +511,12 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={!product.isAvailable}
-                  className="h-14 font-semibold bg-slate-100 text-slate-900 border-2 border-slate-200 hover:bg-slate-200 hover:border-slate-300 transition-all duration-200 rounded-xl"
-                >
-                  <ShoppingBag className="w-5 h-5 mr-3" />
-                  Add to Cart
-                </Button>
+              {/* Buy Now Action */}
+              <div className="w-full">
                 <Button
                   onClick={handleBuyNow}
                   disabled={!product.isAvailable}
-                  className="h-14 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105"
+                  className="w-full h-14 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105"
                 >
                   Buy Now
                 </Button>

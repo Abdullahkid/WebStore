@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Phone, MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { STORE_TABS } from '@/lib/constants';
 import StoreHeader from './StoreHeader';
 import StoreProducts from './StoreProducts';
@@ -38,13 +36,13 @@ export default function StoreProfilePage({
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Store Not Found</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
+          <h1 className="text-2xl font-bold text-[#212121] mb-2">Store Not Found</h1>
+          <p className="text-[#757575] mb-4">{error}</p>
+          <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-[#009CB9] text-white rounded-lg hover:bg-[#008BA5] transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white rounded-full hover:shadow-brand-soft transition-smooth"
           >
             Try Again
           </button>
@@ -53,43 +51,56 @@ export default function StoreProfilePage({
     );
   }
 
+  const tabs = [
+    {
+      key: STORE_TABS.PRODUCTS,
+      label: 'Products',
+      count: storeData.productsCount
+    },
+    {
+      key: STORE_TABS.CATEGORIES,
+      label: 'Categories'
+    },
+    {
+      key: STORE_TABS.REVIEWS,
+      label: 'Reviews'
+    },
+    {
+      key: STORE_TABS.ABOUT,
+      label: 'About'
+    }
+  ];
+
   return (
-    <div className="min-h-screen gradient-surface">
-      {/* App CTA Banner - Fixed at top */}
+    <div className="min-h-screen bg-white">
+      {/* App CTA Banner - Optional */}
       <AppCTABanner storeData={storeData} />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto">
-        {/* Store Header */}
-        <div className="shadow-soft">
-          <StoreHeader storeData={storeData} />
-        </div>
+      {/* Store Header (Hero Section) */}
+      <StoreHeader storeData={storeData} />
 
-        {/* Modern Navigation Tabs - Redesigned */}
-        <div className="glass-card border-0 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-lg">
-          <div className="flex overflow-x-auto no-scrollbar px-4">
-            {[
-              { key: STORE_TABS.PRODUCTS, label: 'Products', icon: '🛍️', count: storeData.productsCount },
-              { key: STORE_TABS.CATEGORIES, label: 'Categories', icon: '📂' },
-              { key: STORE_TABS.REVIEWS, label: 'Reviews', icon: '⭐' },
-              { key: STORE_TABS.ABOUT, label: 'About', icon: 'ℹ️' }
-            ].map((tab) => (
+      {/* Navigation Tabs - Sticky Below Header (Blueprint Design) */}
+      <div className="sticky top-14 md:top-16 z-40 bg-white border-b border-[#E0E0E0] shadow-sm">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="flex overflow-x-auto scrollbar-hide">
+            {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-3 px-6 py-5 whitespace-nowrap font-semibold text-sm transition-all duration-300 border-b-3 hover-lift ${
-                  activeTab === tab.key
-                    ? 'border-primary text-primary bg-primary/5 shadow-soft rounded-t-xl'
-                    : 'border-transparent text-slate-600 hover:text-primary hover:bg-slate-50/50'
-                }`}
+                className={`
+                  relative flex-shrink-0 px-6 py-4 font-medium text-base transition-all duration-300 border-b-3
+                  ${activeTab === tab.key
+                    ? 'text-[#00838F] border-[#00BCD4]'
+                    : 'text-[#757575] border-transparent hover:text-[#00838F] hover:bg-[#F5F5F5]'
+                  }
+                `}
               >
-                <span className="text-lg">{tab.icon}</span>
-                <span>{tab.label}</span>
+                {tab.label}
                 {tab.count !== undefined && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold transition-all ${
                     activeTab === tab.key
-                      ? 'gradient-primary text-white shadow-brand'
-                      : 'bg-slate-200 text-slate-600'
+                      ? 'bg-[#00BCD4] text-white'
+                      : 'bg-[#E0E0E0] text-[#757575]'
                   }`}>
                     {tab.count}
                   </span>
@@ -98,35 +109,35 @@ export default function StoreProfilePage({
             ))}
           </div>
         </div>
-        
-        {/* Tab Contents */}
-        <div className="px-4 py-8">
-          <div className="animate-fade-in">
-            {activeTab === STORE_TABS.PRODUCTS && (
-              <StoreProducts
-                storeId={storeId}
-                initialData={initialProductsData}
-              />
-            )}
+      </div>
 
-            {activeTab === STORE_TABS.CATEGORIES && (
-              <StoreCategories
-                storeId={storeId}
-                initialData={initialCategoriesData}
-              />
-            )}
+      {/* Tab Contents */}
+      <div className="max-w-[1440px] mx-auto">
+        <div className="animate-fade-in">
+          {activeTab === STORE_TABS.PRODUCTS && (
+            <StoreProducts
+              storeId={storeId}
+              initialData={initialProductsData}
+            />
+          )}
 
-            {activeTab === STORE_TABS.REVIEWS && (
-              <StoreReviews
-                storeId={storeId}
-                initialData={initialReviewsData}
-              />
-            )}
+          {activeTab === STORE_TABS.CATEGORIES && (
+            <StoreCategories
+              storeId={storeId}
+              initialData={initialCategoriesData}
+            />
+          )}
 
-            {activeTab === STORE_TABS.ABOUT && (
-              <StoreAbout storeData={storeData} />
-            )}
-          </div>
+          {activeTab === STORE_TABS.REVIEWS && (
+            <StoreReviews
+              storeId={storeId}
+              initialData={initialReviewsData}
+            />
+          )}
+
+          {activeTab === STORE_TABS.ABOUT && (
+            <StoreAbout storeData={storeData} />
+          )}
         </div>
       </div>
     </div>

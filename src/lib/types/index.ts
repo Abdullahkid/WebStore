@@ -7,6 +7,82 @@ export enum ProductCategory {
   ACCESSORIES = "ACCESSORIES",
 }
 
+// ImageGroup System Types
+export enum ImageGroupType {
+  COLOR_BASED = "COLOR_BASED",
+  PRODUCT_WIDE = "PRODUCT_WIDE",
+  INDIVIDUAL = "INDIVIDUAL"
+}
+
+export interface ImageGroup {
+  id: string;
+  name: string;
+  images: string[];
+  groupType: ImageGroupType;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Product Data Types with ImageGroup Support
+export interface ProductPageDetailsDto {
+  id: string;
+  title: string;
+  brandName?: string;
+  description: string;
+  keyFeatures: string[];
+  // Legacy image fields (deprecated but maintained for backward compatibility)
+  defaultImages: string[];
+  images: string[];
+  // New ImageGroup system
+  imageGroups: ImageGroup[];
+  mrp?: number;
+  sellingPrice: number;
+  variants: ProductVariantPageDto[];
+  variantAttributes: Record<string, string[]>;
+  hasVariants: boolean;
+  totalInventory: number;
+  isAvailable: boolean;
+  customAttributes: Record<string, string>;
+  isReturnable: boolean;
+  isCodAllowed: boolean;
+  estimatedDeliveryDays?: { minDays: number; maxDays: number };
+  shippingCost?: { local: number; national: number };
+  averageRating: number;
+  totalReviews: number;
+  storeInfo: StoreProfileMiniDto;
+  discountPercentage: number;
+  formattedPrice: string;
+  formattedMrp?: string;
+}
+
+export interface ProductVariantPageDto {
+  variantId: string;
+  attributes: Record<string, string>;
+  // Legacy image fields (deprecated but maintained for backward compatibility)
+  images: string[];
+  useProductImages: boolean;
+  // New ImageGroup system
+  imageGroupId?: string;
+  mrp?: number;
+  sellingPrice: number;
+  inventory: number;
+  sku?: string;
+  status: string;
+}
+
+export interface StoreProfileMiniDto {
+  businessId: string;
+  storeName: string;
+  storeUsername: string;
+  storeType: string;
+  storeLogo?: string;
+  storeCategory: string;
+  storeRating: number;
+  productsCount: number;
+  followersCount: number;
+  formattedRating: string;
+}
+
 // Social Media Links
 export interface SocialMediaLinks {
   instagram?: string;
