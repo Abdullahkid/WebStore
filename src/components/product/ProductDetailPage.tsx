@@ -54,6 +54,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     fetchProductDetails();
   }, [productId]);
 
+  // Reset selected image index if it's out of bounds when images change
+  useEffect(() => {
+    const images = getCurrentImages();
+    if (selectedImageIndex >= images.length) {
+      setSelectedImageIndex(0);
+    }
+  }, [selectedVariant, product]);
+
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
@@ -110,53 +118,61 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   const getCurrentImages = () => {
     if (!product) return [];
-    
+
     // ImageGroup-aware image resolution logic
     // Priority: Variant-specific ImageGroup > Variant legacy images > Product ImageGroups > Product legacy images
-    
+
     // If variant is selected, try to get images from ImageGroup or fallback to legacy
     if (Object.keys(selectedVariant).length > 0) {
-      const matchingVariant = product.variants.find(variant => 
-        Object.entries(selectedVariant).every(([key, value]) => 
+      const matchingVariant = product.variants.find(variant =>
+        Object.entries(selectedVariant).every(([key, value]) =>
           variant.attributes[key] === value
         )
       );
-      
+
       if (matchingVariant) {
+        console.log('🎨 Variant selected:', selectedVariant, 'Matching variant:', matchingVariant.id);
+
         // Try ImageGroup first (new system)
         if (matchingVariant.imageGroupId) {
           const imageGroup = product.imageGroups?.find(group => group.id === matchingVariant.imageGroupId);
           if (imageGroup && imageGroup.images.length > 0) {
+            console.log('✅ Using variant ImageGroup images:', imageGroup.images.length);
             return imageGroup.images;
           }
         }
-        
+
         // Fallback to legacy variant images
-        if (matchingVariant.images.length > 0 && !matchingVariant.useProductImages) {
+        if (matchingVariant.images && matchingVariant.images.length > 0 && !matchingVariant.useProductImages) {
+          console.log('✅ Using variant legacy images:', matchingVariant.images.length);
           return matchingVariant.images;
         }
       }
     }
-    
+
     // Product-level image resolution with ImageGroup support
     // Try PRODUCT_WIDE ImageGroups first
     if (product.imageGroups && product.imageGroups.length > 0) {
-      const productWideGroup = product.imageGroups.find(group => 
+      const productWideGroup = product.imageGroups.find(group =>
         group.groupType === ImageGroupType.PRODUCT_WIDE
       );
       if (productWideGroup && productWideGroup.images.length > 0) {
+        console.log('✅ Using PRODUCT_WIDE ImageGroup images:', productWideGroup.images.length);
         return productWideGroup.images;
       }
-      
+
       // Fallback to any available ImageGroup
       const firstGroupWithImages = product.imageGroups.find(group => group.images.length > 0);
       if (firstGroupWithImages) {
+        console.log('✅ Using first ImageGroup images:', firstGroupWithImages.images.length);
         return firstGroupWithImages.images;
       }
     }
-    
+
     // Final fallback to legacy product images
-    return product.defaultImages.length > 0 ? product.defaultImages : product.images;
+    const fallbackImages = product.defaultImages && product.defaultImages.length > 0 ? product.defaultImages : product.images;
+    console.log('✅ Using fallback product images:', fallbackImages?.length || 0);
+    return fallbackImages || [];
   };
 
   const getCurrentPrice = () => {
@@ -206,6 +222,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       ...prev,
       [attributeName]: value
     }));
+    // Reset to first image when variant changes
+    setSelectedImageIndex(0);
   };
 
   const handleQuantityChange = (delta: number) => {
@@ -222,20 +240,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       showToast('Please select all product options', 'error');
       return;
     }
-    
+
     // Check if user is authenticated
-    // For MVP, we'll assume user is not authenticated and redirect to registration
-    // In production, you would check authentication state here
-    const isAuthenticated = false; // TODO: Replace with actual auth check
-    
+    // Check localStorage for auth token
+    const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    const isAuthenticated = !!authToken;
+
     if (!isAuthenticated) {
-      // Redirect to registration with return path
+      // Redirect to login with return path
       const returnPath = window.location.pathname;
-      router.push(`/register?redirect=${encodeURIComponent(returnPath)}`);
-      showToast('Please create an account to continue shopping');
+      router.push(`/login?redirect=${encodeURIComponent(returnPath)}`);
+      showToast('Please login to continue shopping');
       return;
     }
-    
+
     // If authenticated, proceed to checkout
     showToast('Proceeding to checkout...');
     // TODO: Implement checkout logic
@@ -296,12 +314,16 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     );
   }
 
+  // Memoize current values to ensure they update when dependencies change
   const currentImages = getCurrentImages();
   const currentPrice = getCurrentPrice();
   const currentInventory = getCurrentInventory();
-  const discount = currentPrice.mrp > currentPrice.selling 
+  const discount = currentPrice.mrp > currentPrice.selling
     ? Math.round(((currentPrice.mrp - currentPrice.selling) / currentPrice.mrp) * 100)
     : 0;
+
+  // Ensure selected image index is valid for current images
+  const safeImageIndex = selectedImageIndex < currentImages.length ? selectedImageIndex : 0;
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -358,10 +380,11 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               {/* Main Image */}
               <div
                 className="aspect-square mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 cursor-pointer image-zoom-container"
-                onClick={() => openLightbox(selectedImageIndex)}
+                onClick={() => openLightbox(safeImageIndex)}
               >
                 <OptimizedImage
-                  imageId={currentImages[selectedImageIndex] || ''}
+                  key={`main-${currentImages[safeImageIndex]}-${safeImageIndex}`}
+                  imageId={currentImages[safeImageIndex] || ''}
                   alt={product.title}
                   variant="detail"
                   className="w-full h-full object-cover"
@@ -373,10 +396,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide desktop-scrollbar">
                   {currentImages.map((image, index) => (
                     <button
-                      key={index}
+                      key={`thumb-${image}-${index}`}
                       onClick={() => setSelectedImageIndex(index)}
                       className={`flex-shrink-0 w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
-                        selectedImageIndex === index
+                        safeImageIndex === index
                           ? 'border-blue-500 shadow-lg scale-105'
                           : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                       }`}
