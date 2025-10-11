@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ChevronLeft, 
-  Star, 
-  Heart, 
-  Share2, 
-  Truck, 
-  Shield, 
-  MessageCircle, 
+import {
+  ChevronLeft,
+  Star,
+  Heart,
+  Share2,
+  Truck,
+  Shield,
+  MessageCircle,
   Store,
   Plus,
   Minus,
@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { auth } from '@/lib/firebase';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -66,14 +67,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('=== FRONTEND DEBUG ===');
       console.log('Fetching product details for ID:', productId);
-      
+
       // Direct backend call - same as Android implementation
       const backendUrl = `https://downxtown.com/api/v1/products/${productId}/page`;
       console.log('Making direct request to backend:', backendUrl);
-      
+
       const response = await fetch(backendUrl, {
         method: 'GET',
         headers: {
@@ -83,20 +84,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         // No caching for debugging
         cache: 'no-store',
       });
-      
+
       console.log('Backend response status:', response.status);
       console.log('Backend response headers:', Object.fromEntries(response.headers.entries()));
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Backend error response:', errorText);
-        
+
         if (response.status === 404) {
           throw new Error(`Product with ID '${productId}' not found`);
         }
         throw new Error(`Backend error ${response.status}: ${errorText}`);
       }
-      
+
       const data = await response.json();
       console.log('✅ Product data received successfully:', {
         id: data.id,
@@ -105,7 +106,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         hasVariants: data.hasVariants,
         imagesCount: data.defaultImages?.length || 0
       });
-      
+
       setProduct(data);
     } catch (err) {
       console.error('=== FRONTEND ERROR ===');
@@ -131,7 +132,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       );
 
       if (matchingVariant) {
-        console.log('🎨 Variant selected:', selectedVariant, 'Matching variant:', matchingVariant.id);
+        console.log('🎨 Variant selected:', selectedVariant, 'Matching variant:', matchingVariant.variantId);
 
         // Try ImageGroup first (new system)
         if (matchingVariant.imageGroupId) {
@@ -177,14 +178,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   const getCurrentPrice = () => {
     if (!product) return { selling: 0, mrp: 0 };
-    
+
     if (Object.keys(selectedVariant).length > 0) {
-      const matchingVariant = product.variants.find(variant => 
-        Object.entries(selectedVariant).every(([key, value]) => 
+      const matchingVariant = product.variants.find(variant =>
+        Object.entries(selectedVariant).every(([key, value]) =>
           variant.attributes[key] === value
         )
       );
-      
+
       if (matchingVariant) {
         return {
           selling: matchingVariant.sellingPrice,
@@ -192,7 +193,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         };
       }
     }
-    
+
     return {
       selling: product.sellingPrice,
       mrp: product.mrp || 0
@@ -201,19 +202,19 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   const getCurrentInventory = () => {
     if (!product) return 0;
-    
+
     if (Object.keys(selectedVariant).length > 0) {
-      const matchingVariant = product.variants.find(variant => 
-        Object.entries(selectedVariant).every(([key, value]) => 
+      const matchingVariant = product.variants.find(variant =>
+        Object.entries(selectedVariant).every(([key, value]) =>
           variant.attributes[key] === value
         )
       );
-      
+
       if (matchingVariant) {
         return matchingVariant.inventory;
       }
     }
-    
+
     return product.totalInventory;
   };
 
@@ -229,34 +230,115 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
     const maxQuantity = getCurrentInventory();
-    
+
     if (newQuantity >= 1 && newQuantity <= Math.min(10, maxQuantity)) {
       setQuantity(newQuantity);
     }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
+    // Validate variant selection
     if (product?.hasVariants && Object.keys(selectedVariant).length !== Object.keys(product.variantAttributes).length) {
       showToast('Please select all product options', 'error');
       return;
     }
 
-    // Check if user is authenticated
-    // Check localStorage for auth token
+    // Check if user is authenticated by checking authToken in localStorage
     const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    const isAuthenticated = !!authToken;
 
-    if (!isAuthenticated) {
-      // Redirect to login with return path
-      const returnPath = window.location.pathname;
-      router.push(`/login?redirect=${encodeURIComponent(returnPath)}`);
-      showToast('Please login to continue shopping');
+    if (!authToken) {
+      // User is not logged in - save buy now intent and redirect to login
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('buyNowIntent', JSON.stringify({
+          productId: product?.id,
+          variantId: Object.keys(selectedVariant).length > 0 ? getSelectedVariantId() : null,
+          quantity: quantity,
+        }));
+      }
+
+      showToast('Please login to continue', 'info');
+      router.push('/login');
       return;
     }
 
-    // If authenticated, proceed to checkout
-    showToast('Proceeding to checkout...');
-    // TODO: Implement checkout logic
+    // User is logged in - check account type
+    const accountType = typeof window !== 'undefined' ? localStorage.getItem('accountType') : null;
+    
+    if (accountType !== 'PERSONAL') {
+      showToast('Only personal accounts can purchase products', 'error');
+      return;
+    }
+
+    // Check if user has address
+    try {
+      const hasAddress = await checkUserHasAddress();
+
+      if (!hasAddress) {
+        // Save checkout intent and redirect to address page
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('checkoutIntent', JSON.stringify({
+            productId: product?.id,
+            variantId: Object.keys(selectedVariant).length > 0 ? getSelectedVariantId() : null,
+            quantity: quantity,
+          }));
+        }
+
+        showToast('Please add your delivery address', 'info');
+        router.push('/address');
+        return;
+      }
+
+      // User has address - go directly to checkout
+      const userId = localStorage.getItem('userId');
+      const checkoutParams = new URLSearchParams({
+        customerId: userId || '',
+        productId: product?.id || '',
+        quantity: quantity.toString(),
+        ...(Object.keys(selectedVariant).length > 0 && { variantId: getSelectedVariantId() || '' }),
+      });
+
+      router.push(`/checkout?${checkoutParams.toString()}`);
+    } catch (error) {
+      console.error('Error in buy now flow:', error);
+      showToast('An error occurred. Please try again.', 'error');
+    }
+  };
+
+  const getSelectedVariantId = (): string | null => {
+    if (!product || Object.keys(selectedVariant).length === 0) return null;
+
+    const matchingVariant = product.variants.find(variant =>
+      Object.entries(selectedVariant).every(([key, value]) =>
+        variant.attributes[key] === value
+      )
+    );
+
+    return matchingVariant?.variantId || null;
+  };
+
+  const checkUserHasAddress = async (): Promise<boolean> => {
+    try {
+      if (!auth.currentUser) return false;
+
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch('https://downxtown.com/user/address', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return !!data && !!data.addressLine1;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking address:', error);
+      return false;
+    }
   };
 
   const handleShare = async () => {
@@ -332,44 +414,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50">
-        <div className="desktop-container-wide">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsWishlisted(!isWishlisted)}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-all duration-200"
-              >
-                <Heart className={`w-5 h-5 transition-all duration-200 ${
-                  isWishlisted
-                    ? 'fill-red-500 text-red-500 scale-110'
-                    : 'text-slate-600 hover:text-red-500'
-                }`} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-              >
-                <Share2 className="w-5 h-5 text-slate-600" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="desktop-container-wide py-6 lg:py-10">
         {/* Desktop 3-Column Layout: Image Gallery | Product Info | Store Sidebar */}
@@ -398,11 +442,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                     <button
                       key={`thumb-${image}-${index}`}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
-                        safeImageIndex === index
+                      className={`flex-shrink-0 w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-3 transition-all duration-200 ${safeImageIndex === index
                           ? 'border-blue-500 shadow-lg scale-105'
                           : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-                      }`}
+                        }`}
                     >
                       <OptimizedImage
                         imageId={image}
@@ -440,11 +483,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.floor(product.averageRating)
+                          className={`w-4 h-4 ${i < Math.floor(product.averageRating)
                               ? 'text-amber-400 fill-current'
                               : 'text-slate-300'
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -477,16 +519,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
               {/* Stock Status */}
               <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full animate-pulse ${
-                  currentInventory > 10 ? 'bg-emerald-500' :
-                  currentInventory > 0 ? 'bg-amber-500' : 'bg-red-500'
-                }`} />
-                <span className={`text-sm font-semibold ${
-                  currentInventory > 10 ? 'text-emerald-600' :
-                  currentInventory > 0 ? 'text-amber-600' : 'text-red-600'
-                }`}>
+                <div className={`w-3 h-3 rounded-full animate-pulse ${currentInventory > 10 ? 'bg-emerald-500' :
+                    currentInventory > 0 ? 'bg-amber-500' : 'bg-red-500'
+                  }`} />
+                <span className={`text-sm font-semibold ${currentInventory > 10 ? 'text-emerald-600' :
+                    currentInventory > 0 ? 'text-amber-600' : 'text-red-600'
+                  }`}>
                   {currentInventory > 10 ? 'In Stock' :
-                   currentInventory > 0 ? `Only ${currentInventory} left!` : 'Out of Stock'}
+                    currentInventory > 0 ? `Only ${currentInventory} left!` : 'Out of Stock'}
                 </span>
               </div>
             </div>
@@ -506,11 +546,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                         <button
                           key={option}
                           onClick={() => handleVariantSelection(attributeName, option)}
-                          className={`px-5 py-3 border-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-md ${
-                            selectedVariant[attributeName] === option
+                          className={`px-5 py-3 border-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-md ${selectedVariant[attributeName] === option
                               ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg scale-105'
                               : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                          }`}
+                            }`}
                         >
                           {option}
                         </button>
@@ -546,14 +585,27 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 </div>
               </div>
 
-              {/* Buy Now Action */}
-              <div className="w-full">
+              {/* Buy Now and WhatsApp Actions */}
+              <div className="w-full flex gap-3">
                 <Button
                   onClick={handleBuyNow}
                   disabled={!product.isAvailable}
-                  className="w-full h-14 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105"
+                  className="flex-1 h-14 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105"
                 >
                   Buy Now
+                </Button>
+                <Button
+                  onClick={() => {
+                    const message = `Hi, I'm interested in ${product.title}`;
+                    const whatsappUrl = `https://wa.me/${product.storeInfo.phoneNumber}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                  }}
+                  className="flex-1 h-14 font-semibold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                  <span>Chat</span>
                 </Button>
               </div>
             </div>
@@ -664,12 +716,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 >
                   <Store className="w-6 h-6 mr-3" />
                   Visit Store
-                </Button>
-                <Button
-                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 hover:shadow-xl hover-lift-desktop"
-                >
-                  <MessageCircle className="w-6 h-6 mr-3" />
-                  Chat with Store
                 </Button>
               </div>
             </div>

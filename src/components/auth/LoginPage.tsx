@@ -5,15 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Phone, Lock, User, Building2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { showToast } from '@/lib/toast';
-
-type AccountType = 'PERSONAL' | 'BUSINESS';
+import { AccountType } from '@/types/user';
+import { authService } from '@/lib/auth/authService';
+import { userStorage } from '@/lib/storage/userStorage';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
 
-  const [accountType, setAccountType] = useState<AccountType>('PERSONAL');
+  const [accountType, setAccountType] = useState<AccountType>(AccountType.PERSONAL);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -54,42 +55,60 @@ export default function LoginPage() {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
       const fullPhoneNumber = `+91${cleanPhone}`;
 
-      const response = await fetch('https://downxtown.com/auth/login/phone-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: fullPhoneNumber,
-          password: password,
-          accountType: accountType,
-        }),
-      });
+      // Use authService for login
+      const loginResponse = await authService.loginWithPhonePassword(fullPhoneNumber, password, accountType);
 
-      const data = await response.json();
+      if (loginResponse.success) {
+        // Check if there's a buy now intent saved
+        const buyNowIntent = sessionStorage.getItem('buyNowIntent');
+        const checkoutIntent = sessionStorage.getItem('checkoutIntent');
 
-      if (response.ok && data.success) {
-        showToast('Login successful! Welcome back.', 'success');
+        if (buyNowIntent || checkoutIntent) {
+          // User was trying to buy something - check if they have address
+          const hasAddress = await userStorage.hasAddress();
 
-        // Store auth data in localStorage (in production, use secure cookies/session)
-        localStorage.setItem('authToken', data.customFirebaseToken);
-        localStorage.setItem('userId', data.userId);
-        localStorage.setItem('accountType', data.accountType);
+          if (!hasAddress) {
+            showToast('Please add your delivery address', 'info');
+            router.push('/address');
+            return;
+          }
 
-        if (data.initialUser) {
-          localStorage.setItem('userName', data.initialUser.fullName || '');
-        } else if (data.initialBusiness) {
-          localStorage.setItem('userName', data.initialBusiness.storeName || '');
+          // Has address - redirect to checkout
+          const intent = JSON.parse(buyNowIntent || checkoutIntent || '{}');
+          const userId = localStorage.getItem('userId');
+          const checkoutParams = new URLSearchParams({
+            customerId: userId || '',
+            productId: intent.productId || '',
+            quantity: intent.quantity?.toString() || '1',
+            ...(intent.variantId && { variantId: intent.variantId }),
+          });
+
+          // Clear the intent
+          sessionStorage.removeItem('buyNowIntent');
+          sessionStorage.removeItem('checkoutIntent');
+
+          router.push(`/checkout?${checkoutParams.toString()}`);
+          return;
+        }
+
+        // Check if personal user has an address for normal login flow
+        if (loginResponse.accountType === AccountType.PERSONAL) {
+          const hasAddress = await userStorage.hasAddress();
+
+          if (!hasAddress) {
+            showToast('Please add your delivery address', 'info');
+            router.push('/address');
+            return;
+          }
         }
 
         // Redirect to original page or home
         router.push(redirectPath);
-      } else {
-        showToast(data.message || 'Invalid phone number or password', 'error');
       }
     } catch (error) {
       console.error('Login error:', error);
-      showToast('An error occurred. Please try again.', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred. Please try again.';
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -125,23 +144,21 @@ export default function LoginPage() {
             <p className="text-sm text-slate-600 text-center mb-3">I'm logging in as a</p>
             <div className="flex gap-2 p-1 bg-slate-100 rounded-full">
               <button
-                onClick={() => setAccountType('PERSONAL')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-semibold transition-all duration-200 ${
-                  accountType === 'PERSONAL'
-                    ? 'bg-[#00BCD4] text-white shadow-md'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                onClick={() => setAccountType(AccountType.PERSONAL)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-semibold transition-all duration-200 ${accountType === AccountType.PERSONAL
+                  ? 'bg-[#00BCD4] text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+                  }`}
               >
                 <User className="w-4 h-4" />
                 Personal
               </button>
               <button
-                onClick={() => setAccountType('BUSINESS')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-semibold transition-all duration-200 ${
-                  accountType === 'BUSINESS'
-                    ? 'bg-[#00BCD4] text-white shadow-md'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                onClick={() => setAccountType(AccountType.BUSINESS)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-semibold transition-all duration-200 ${accountType === AccountType.BUSINESS
+                  ? 'bg-[#00BCD4] text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+                  }`}
               >
                 <Building2 className="w-4 h-4" />
                 Business
@@ -162,11 +179,10 @@ export default function LoginPage() {
                 value={phoneNumber}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="XXXXX XXXXX"
-                className={`w-full pl-24 pr-4 py-3 border-2 rounded-xl text-base transition-all ${
-                  phoneError
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-slate-200 focus:border-[#00BCD4]'
-                } focus:outline-none focus:ring-2 focus:ring-[#00BCD4]/20`}
+                className={`w-full pl-24 pr-4 py-3 border-2 rounded-xl text-base transition-all ${phoneError
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-slate-200 focus:border-[#00BCD4]'
+                  } focus:outline-none focus:ring-2 focus:ring-[#00BCD4]/20`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     document.getElementById('password-input')?.focus();
@@ -188,11 +204,10 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Enter your password"
-                className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl text-base transition-all ${
-                  passwordError
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-slate-200 focus:border-[#00BCD4]'
-                } focus:outline-none focus:ring-2 focus:ring-[#00BCD4]/20`}
+                className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl text-base transition-all ${passwordError
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-slate-200 focus:border-[#00BCD4]'
+                  } focus:outline-none focus:ring-2 focus:ring-[#00BCD4]/20`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleLogin();

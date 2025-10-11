@@ -121,6 +121,13 @@ export default function OtpVerification({
         onVerificationSuccess(registrationData);
       }
 
+      // For personal accounts, check if this is a new user and redirect to address page
+      if (accountType === AccountType.PERSONAL && registrationData.isNewUser) {
+        // New personal user needs to add address
+        router.push('/address');
+        return;
+      }
+
       // Redirect to intended destination
       router.push(redirectPath);
 

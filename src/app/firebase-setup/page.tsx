@@ -38,12 +38,12 @@ export default function FirebaseSetupGuide() {
         'Save the appId - you\'ll need it in the next step'
       ],
       code: `const firebaseConfig = {
-  apiKey: "AIzaSyAhMu-Xq7eC00PzQ_VXI28tI2LkO6iP1Io",
-  authDomain: "sigma2-25a57.firebaseapp.com", 
-  projectId: "sigma2-25a57",
-  storageBucket: "sigma2-25a57.firebasestorage.app",
-  messagingSenderId: "145044904314",
-  appId: "1:145044904314:web:YOUR_ACTUAL_WEB_APP_ID"
+  apiKey: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'YOUR_API_KEY'}",
+  authDomain: "${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com'}", 
+  projectId: "${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'your-project-id'}",
+  storageBucket: "${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'your-project.firebasestorage.app'}",
+  messagingSenderId: "${process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID'}",
+  appId: "${process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'YOUR_APP_ID'}"
 };`
     },
     {
@@ -96,7 +96,7 @@ export default function FirebaseSetupGuide() {
             🔥 Firebase Setup Required
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Your webstore needs Firebase Phone Authentication configured to send real OTPs. 
+            Your webstore needs Firebase Phone Authentication configured to send real OTPs.
             Follow these steps to complete the setup.
           </p>
         </div>
@@ -108,12 +108,12 @@ export default function FirebaseSetupGuide() {
             <div>
               <h3 className="text-yellow-800 font-semibold mb-2">Current Status</h3>
               <p className="text-yellow-700 mb-3">
-                Firebase configuration is incomplete. The system is currently using <strong>mock authentication</strong> 
+                Firebase configuration is incomplete. The system is currently using <strong>mock authentication</strong>
                 for testing, but you won't receive real SMS messages.
               </p>
               <div className="bg-yellow-100 rounded p-3">
                 <p className="text-sm text-yellow-800">
-                  <strong>Error:</strong> <code>auth/invalid-app-credential</code> - 
+                  <strong>Error:</strong> <code>auth/invalid-app-credential</code> -
                   This happens because the web app hasn't been registered in Firebase yet.
                 </p>
               </div>
