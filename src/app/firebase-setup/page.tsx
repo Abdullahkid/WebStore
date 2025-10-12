@@ -38,13 +38,13 @@ export default function FirebaseSetupGuide() {
         'Save the appId - you\'ll need it in the next step'
       ],
       code: `const firebaseConfig = {
-  apiKey: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'YOUR_API_KEY'}",
-  authDomain: "${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com'}", 
-  projectId: "${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'your-project-id'}",
-  storageBucket: "${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'your-project.firebasestorage.app'}",
-  messagingSenderId: "${process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID'}",
-  appId: "${process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'YOUR_APP_ID'}"
-};`
+      apiKey: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'YOUR_API_KEY'}",
+      authDomain: "${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com'}", 
+      projectId: "${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'your-project-id'}",
+      storageBucket: "${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'your-project.firebasestorage.app'}",
+      messagingSenderId: "${process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID'}",
+      appId: "${process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'YOUR_APP_ID'}"
+      };`
     },
     {
       id: 3,

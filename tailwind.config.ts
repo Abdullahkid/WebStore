@@ -70,10 +70,32 @@ const config: Config = {
           accent: '#16DAFF',
           background: '#ABF2FF',
           'light-bg': '#F0F8FF',
-          black: '#212121',
-          'dark-gray': '#757575',
+          black: '#000000',
+          'dark-gray': '#1a1a1a',
+          'medium-gray': '#333333',
+          cyan: '#00FFFF',
+          'cyan-dark': '#00CCCC',
+          'cyan-light': '#66FFFF',
+          teal: '#008080',
+          'teal-dark': '#006666',
+          'teal-light': '#4DCCCC',
+          white: '#FFFFFF',
+          'off-white': '#F8F8F8',
           success: '#4CAF50',
           error: '#F44336',
+        },
+        // Semantic colors for conversion optimization
+        seller: {
+          primary: '#00FFFF', // Cyan for seller CTAs
+        },
+        buyer: {
+          primary: '#4DCCCC', // Teal-light for buyer CTAs
+        },
+        trust: {
+          green: '#10B981', // Success/trust indicators
+        },
+        urgency: {
+          orange: '#F59E0B', // Countdown/scarcity
         },
       },
       borderRadius: {
