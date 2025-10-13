@@ -2,48 +2,75 @@
 const nextConfig = {
   // Disable SWC minification to avoid worker issues
   swcMinify: false,
-  
+
   // Exclude Firebase from server-side bundling
   serverComponentsExternalPackages: ['firebase', 'firebase/app', 'firebase/auth'],
-  
+
   // Optimize webpack configuration for Windows
   webpack: (config, { dev, isServer }) => {
     // Disable parallelism to prevent worker issues
     config.parallelism = 1;
-    
+
     // Disable cache to prevent corruption issues
     config.cache = false;
-    
-    // Fix Firebase on server side - exclude from server bundle
+
+    // Fix Firebase on server side - completely exclude from server bundle
     if (isServer) {
+      // Completely remove Firebase from server bundles
       config.resolve.alias = {
         ...config.resolve.alias,
+        '@/lib/firebase': false,
         'firebase/app': false,
         'firebase/auth': false,
+        'firebase/analytics': false,
+        'firebase/messaging': false,
+        'firebase/firestore': false,
+        'firebase': false,
       };
+
+      // Also externalize to prevent bundling
+      const externals = config.externals || [];
+      config.externals = [
+        ...( Array.isArray(externals) ? externals : [externals]),
+        'firebase',
+        'firebase/app',
+        'firebase/auth',
+        '@firebase/app',
+        '@firebase/auth',
+      ];
     }
-    
+
     // Additional optimizations for production builds
     if (!dev) {
+      // Firebase should only be in client bundle
       config.optimization = {
         ...config.optimization,
         minimize: false, // Temporarily disable minification
-        splitChunks: {
+        splitChunks: isServer ? false : {
           chunks: 'all',
           cacheGroups: {
             default: false,
             vendors: false,
-            // Only split vendor code
+            // Firebase in its own chunk (client only)
+            firebase: {
+              name: 'firebase',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](@firebase|firebase)[\\/]/,
+              priority: 10,
+              enforce: true,
+            },
+            // Other vendor code
             vendor: {
               name: 'vendor',
               chunks: 'all',
-              test: /node_modules/,
+              test: /[\\/]node_modules[\\/](?!(@firebase|firebase)[\\/])/,
+              priority: 5,
             },
           },
         },
       };
     }
-    
+
     // Fix for Windows file watching issues
     if (dev) {
       config.watchOptions = {
@@ -52,7 +79,7 @@ const nextConfig = {
         ignored: /node_modules/,
       };
     }
-    
+
     return config;
   },
   
