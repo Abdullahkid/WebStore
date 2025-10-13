@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Make request to Ktor backend (same endpoint as Android)
-      const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
+      const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com';
       const fullUrl = `${backendUrl}/api/v1/auth/firebase-signin`;
       
       const backendResponse = await fetch(fullUrl, {
