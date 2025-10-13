@@ -1,6 +1,8 @@
 // Firebase configuration and initialization
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+// Using dynamic imports to prevent server-side execution
+
+import type { FirebaseApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -13,19 +15,58 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase only on client side
+// Lazy initialization - only runs on client
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let initPromise: Promise<void> | undefined;
 
-if (typeof window !== 'undefined') {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    auth = getAuth(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
+async function initializeFirebase() {
+  if (typeof window === 'undefined') {
+    return; // Don't initialize on server
   }
+
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = (async () => {
+    try {
+      const { initializeApp, getApps } = await import('firebase/app');
+      const { getAuth } = await import('firebase/auth');
+      
+      app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+      auth = getAuth(app);
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+    }
+  })();
+
+  return initPromise;
 }
 
-// Export with fallback for server-side
+// Getter functions that ensure Firebase is initialized
+export async function getFirebaseAuth(): Promise<Auth | undefined> {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  
+  if (!auth) {
+    await initializeFirebase();
+  }
+  return auth;
+}
+
+export async function getFirebaseApp(): Promise<FirebaseApp | undefined> {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  
+  if (!app) {
+    await initializeFirebase();
+  }
+  return app;
+}
+
+// For backwards compatibility - synchronous access (may be undefined initially)
 export { auth };
 export default app;

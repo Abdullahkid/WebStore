@@ -3,6 +3,9 @@ const nextConfig = {
   // Disable SWC minification to avoid worker issues
   swcMinify: false,
   
+  // Exclude Firebase from server-side bundling
+  serverComponentsExternalPackages: ['firebase', 'firebase/app', 'firebase/auth'],
+  
   // Optimize webpack configuration for Windows
   webpack: (config, { dev, isServer }) => {
     // Disable parallelism to prevent worker issues
