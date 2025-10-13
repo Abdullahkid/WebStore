@@ -1,19 +1,16 @@
 // Firebase Phone Authentication Service
-import { 
+import type { 
   RecaptchaVerifier, 
-  signInWithPhoneNumber, 
-  PhoneAuthProvider,
-  signInWithCredential,
-  ConfirmationResult
+  ConfirmationResult,
+  Auth
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { mockFirebasePhoneAuth } from './mock-phone-auth';
 
 // Global state to store verification
 let currentVerificationResult: ConfirmationResult | null = null;
 
 // Check if Firebase is properly configured
-function isFirebaseConfigured(): boolean {
+async function isFirebaseConfigured(): Promise<boolean> {
   try {
     // For development, allow bypassing Firebase with environment variable
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true') {
@@ -24,6 +21,12 @@ function isFirebaseConfigured(): boolean {
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
       return false;
     }
+    
+    // Dynamically import auth
+    const { getFirebaseAuth } = await import('@/lib/firebase');
+    const auth = await getFirebaseAuth();
+    
+    if (!auth) return false;
     
     // Check if we have a valid app ID (not the placeholder)
     const config = auth.app.options;
@@ -40,56 +43,56 @@ export class FirebasePhoneAuthService {
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
   // Initialize reCAPTCHA verifier
-  private initializeRecaptcha(containerId: string = 'recaptcha-container'): Promise<RecaptchaVerifier> {
-    return new Promise((resolve, reject) => {
-      try {
-        if (this.recaptchaVerifier) {
-          resolve(this.recaptchaVerifier);
-          return;
-        }
-
-        // Check if container exists and create if needed
-        let container = document.getElementById(containerId);
-        if (!container) {
-          container = document.createElement('div');
-          container.id = containerId;
-          container.style.display = 'none';
-          document.body.appendChild(container);
-        }
-        
-        // Verify container is in DOM
-        const verifyContainer = document.getElementById(containerId);
-        if (!verifyContainer) {
-          throw new Error(`Container '${containerId}' could not be created or found`);
-        }
-        
-        // Create reCAPTCHA verifier with minimal options first
-        this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-          size: 'invisible',
-          callback: (response: any) => {
-            // reCAPTCHA solved
-          },
-          'expired-callback': () => {
-            // reCAPTCHA expired
-          },
-          'error-callback': (error: any) => {
-            console.error('reCAPTCHA error:', error);
-          }
-        });
-
-        resolve(this.recaptchaVerifier);
-        
-      } catch (error) {
-        console.error('Error initializing reCAPTCHA:', error);
-        reject(error);
+  private async initializeRecaptcha(auth: Auth, containerId: string = 'recaptcha-container'): Promise<RecaptchaVerifier> {
+    try {
+      if (this.recaptchaVerifier) {
+        return this.recaptchaVerifier;
       }
-    });
+
+      // Check if container exists and create if needed
+      let container = document.getElementById(containerId);
+      if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.style.display = 'none';
+        document.body.appendChild(container);
+      }
+      
+      // Verify container is in DOM
+      const verifyContainer = document.getElementById(containerId);
+      if (!verifyContainer) {
+        throw new Error(`Container '${containerId}' could not be created or found`);
+      }
+      
+      // Dynamically import RecaptchaVerifier
+      const { RecaptchaVerifier } = await import('firebase/auth');
+      
+      // Create reCAPTCHA verifier with minimal options first
+      this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: (response: any) => {
+          // reCAPTCHA solved
+        },
+        'expired-callback': () => {
+          // reCAPTCHA expired
+        },
+        'error-callback': (error: any) => {
+          console.error('reCAPTCHA error:', error);
+        }
+      });
+
+      return this.recaptchaVerifier;
+      
+    } catch (error) {
+      console.error('Error initializing reCAPTCHA:', error);
+      throw error;
+    }
   }
 
   // Send OTP to phone number
   async sendOTP(phoneNumber: string): Promise<{ success: boolean; verificationId?: string; error?: string }> {
     // Check if Firebase is properly configured or if we should use mock
-    const isConfigured = isFirebaseConfigured();
+    const isConfigured = await isFirebaseConfigured();
     const useMock = !isConfigured || 
                    (typeof window !== 'undefined' && localStorage.getItem('NEXT_PUBLIC_USE_MOCK_AUTH') === 'true');
     
@@ -98,6 +101,16 @@ export class FirebasePhoneAuthService {
     }
 
     try {
+      // Get Firebase auth instance
+      const { getFirebaseAuth } = await import('@/lib/firebase');
+      const auth = await getFirebaseAuth();
+      
+      if (!auth) {
+        throw new Error('Firebase auth not available');
+      }
+      
+      // Import signInWithPhoneNumber
+      const { signInWithPhoneNumber } = await import('firebase/auth');
       // Validate phone number format first
       if (!phoneNumber || typeof phoneNumber !== 'string') {
         throw new Error('Phone number is required and must be a string');
@@ -131,7 +144,7 @@ export class FirebasePhoneAuthService {
         this.recaptchaVerifier = null;
       }
       
-      const recaptchaVerifier = await this.initializeRecaptcha();
+      const recaptchaVerifier = await this.initializeRecaptcha(auth);
 
       // Send verification code
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
@@ -184,7 +197,7 @@ export class FirebasePhoneAuthService {
   // Verify OTP code
   async verifyOTP(otp: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }> {
     // Check if Firebase is properly configured
-    if (!isFirebaseConfigured()) {
+    if (!(await isFirebaseConfigured())) {
       return mockFirebasePhoneAuth.verifyOTP(otp);
     }
 

@@ -1,8 +1,6 @@
 // Authentication service for handling login flow
 // Based on Sigma2 Android app authentication patterns
 
-import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { userStorage } from '@/lib/storage/userStorage';
 import { PhonePasswordLoginResponse, AccountType } from '@/types/user';
 import { showToast } from '@/lib/toast';
@@ -62,6 +60,14 @@ class AuthService {
 
     try {
       // 1. Sign in with Firebase using custom token
+      const { getFirebaseAuth } = await import('@/lib/firebase');
+      const { signInWithCustomToken } = await import('firebase/auth');
+      const auth = await getFirebaseAuth();
+      
+      if (!auth) {
+        throw new Error('Firebase auth not available');
+      }
+      
       const userCredential = await signInWithCustomToken(auth, customFirebaseToken);
       console.log('Firebase sign-in successful:', userCredential.user.uid);
 
@@ -129,7 +135,12 @@ class AuthService {
   async logout(): Promise<void> {
     try {
       // Sign out from Firebase
-      await auth.signOut();
+      const { getFirebaseAuth } = await import('@/lib/firebase');
+      const auth = await getFirebaseAuth();
+      
+      if (auth) {
+        await auth.signOut();
+      }
       
       // Clear local storage
       await userStorage.clearUserData();
@@ -191,6 +202,13 @@ class AuthService {
    * Get Firebase ID token for API calls
    */
   async getFirebaseIdToken(): Promise<string> {
+    const { getFirebaseAuth } = await import('@/lib/firebase');
+    const auth = await getFirebaseAuth();
+    
+    if (!auth) {
+      throw new Error('Firebase auth not available');
+    }
+    
     const user = auth.currentUser;
     if (!user) {
       throw new Error('User not authenticated');
@@ -205,6 +223,12 @@ class AuthService {
     try {
       const authToken = localStorage.getItem('authToken');
       if (!authToken) return false;
+
+      const { getFirebaseAuth } = await import('@/lib/firebase');
+      const { signInWithCustomToken } = await import('firebase/auth');
+      const auth = await getFirebaseAuth();
+      
+      if (!auth) return false;
 
       // Try to sign in with stored token if not already signed in
       if (!auth.currentUser) {
