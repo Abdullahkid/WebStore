@@ -111,6 +111,8 @@ export interface StoreProfileData {
   email?: string;
   isFollowing: boolean;
   createdAt: number;
+  subdomain?: string;  // Webstore subdomain (e.g., "omega")
+  webstoreUrl?: string;  // Full webstore URL (e.g., "https://omega.downxtown.com")
 }
 
 // API Response for Store Profile

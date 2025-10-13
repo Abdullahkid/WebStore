@@ -23,6 +23,11 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
     const imageUrl = store.storeLogo 
       ? apiClient.getImageUrl(store.storeLogo, 'banner')
       : SEO_CONFIG.defaultImage;
+    
+    // Use subdomain URL if available, otherwise fall back to slug-based URL
+    const storeUrl = store.subdomain 
+      ? `https://${store.subdomain}.downxtown.com`
+      : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://webstore.downxtown.com'}/store/${params.slug}`;
 
     return {
       title,
@@ -36,7 +41,7 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
       openGraph: {
         title,
         description,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://webstore.downxtown.com'}/store/${params.slug}`,
+        url: storeUrl,
         siteName: SEO_CONFIG.siteName,
         images: [
           {
@@ -85,6 +90,63 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
   }
 }
 
+// Helper function to detect identifier type
+function detectIdentifierType(identifier: string): 'subdomain' | 'id' | 'username' {
+  // MongoDB ObjectId pattern (24 hex characters)
+  const isMongoId = /^[0-9a-fA-F]{24}$/.test(identifier);
+  if (isMongoId) return 'id';
+  
+  // Subdomain pattern (3-30 chars, lowercase, alphanumeric + hyphens, no underscores)
+  const isSubdomain = /^[a-z0-9-]{3,30}$/.test(identifier) && !identifier.includes('_');
+  if (isSubdomain) return 'subdomain';
+  
+  // Username pattern (has underscore)
+  return 'username';
+}
+
+// Helper function to fetch store by identifier type
+async function fetchStoreByIdentifier(identifier: string) {
+  const identifierType = detectIdentifierType(identifier);
+  
+  try {
+    let response;
+    
+    switch (identifierType) {
+      case 'subdomain':
+        // Fetch by subdomain (most common via middleware)
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-subdomain/${identifier}`,
+          { cache: 'no-store' }
+        );
+        break;
+        
+      case 'id':
+        // Fetch by MongoDB ID (legacy support)
+        response = await apiClient.getStoreProfile(identifier);
+        return response;
+        
+      case 'username':
+        // Fetch by username (fallback)
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-username/${identifier}`,
+          { cache: 'no-store' }
+        );
+        break;
+    }
+    
+    if (!response.ok) {
+      return { success: false, storeProfile: null };
+    }
+    
+    const storeProfile = await response.json();
+    return { success: true, storeProfile };
+    
+  } catch (error) {
+    console.error(`Error fetching store by ${identifierType}:`, error);
+    return { success: false, storeProfile: null };
+  }
+}
+
 // Main page component with SSR data fetching
 export default async function StorePage({ params, searchParams }: StorePageProps) {
   let storeData = null;
@@ -94,8 +156,8 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   let error = null;
 
   try {
-    // Fetch store profile data on the server
-    const storeResponse = await apiClient.getStoreProfile(params.slug);
+    // Fetch store profile data on the server (supports subdomain, ID, or username)
+    const storeResponse = await fetchStoreByIdentifier(params.slug);
     
     if (!storeResponse.success || !storeResponse.storeProfile) {
       notFound();
@@ -136,13 +198,17 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   }
 
   // Generate JSON-LD structured data for better SEO
+  const storeUrl = storeData.subdomain 
+    ? `https://${storeData.subdomain}.downxtown.com`
+    : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://webstore.downxtown.com'}/store/${params.slug}`;
+  
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Store',
     name: storeData.storeName,
     description: storeData.storeDescription,
     image: storeData.storeLogo ? apiClient.getImageUrl(storeData.storeLogo, 'banner') : undefined,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://webstore.downxtown.com'}/store/${params.slug}`,
+    url: storeUrl,
     telephone: storeData.phoneNumber,
     email: storeData.email,
     address: storeData.location ? {
@@ -174,9 +240,9 @@ export default async function StorePage({ params, searchParams }: StorePageProps
       {/* Main store profile component */}
       <StoreProfilePage
         storeData={storeData}
-        initialProductsData={initialProductsData}
-        initialCategoriesData={initialCategoriesData}
-        initialReviewsData={initialReviewsData}
+        initialProductsData={initialProductsData || undefined}
+        initialCategoriesData={initialCategoriesData || undefined}
+        initialReviewsData={initialReviewsData || undefined}
         storeId={params.slug}
         error={error}
       />
