@@ -4,7 +4,7 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-6 py-12 text-center">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            DownXtown Webstore
+            Downxtown Webstore
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             This is the webstore platform for individual sellers.
