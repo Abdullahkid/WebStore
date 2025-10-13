@@ -8,7 +8,7 @@ import type {
   Address,
 } from '@/types/checkout';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://downxtown.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
 
 /**
  * Initiate checkout and get all necessary data

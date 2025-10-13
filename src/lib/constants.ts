@@ -12,7 +12,7 @@ export const BRAND_COLORS = {
 
 // API Configuration
 export const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com',
   endpoints: {
     storeProfile: (storeId: string) => `/stores/${storeId}/profile`,
     storeProducts: (storeId: string) => `/stores/${storeId}/products`,
