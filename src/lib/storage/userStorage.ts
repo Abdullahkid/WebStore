@@ -17,6 +17,11 @@ class UserStorageService {
 
   // Initialize IndexedDB (similar to Room database setup)
   async initDB(): Promise<void> {
+    // Only initialize on client side
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      return Promise.resolve();
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version);
 
@@ -58,6 +63,11 @@ class UserStorageService {
 
   // Ensure DB is initialized
   private async ensureDB(): Promise<IDBDatabase> {
+    // Guard against server-side execution
+    if (typeof window === 'undefined') {
+      throw new Error('IndexedDB is not available on server side');
+    }
+
     if (!this.db) {
       await this.initDB();
     }
@@ -271,5 +281,7 @@ class UserStorageService {
 // Export singleton instance
 export const userStorage = new UserStorageService();
 
-// Initialize on import
-userStorage.initDB().catch(console.error);
+// Initialize on import (only on client side)
+if (typeof window !== 'undefined') {
+  userStorage.initDB().catch(console.error);
+}

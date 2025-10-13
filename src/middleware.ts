@@ -3,25 +3,45 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Middleware for handling subdomain-based store routing
- * 
+ *
  * Extracts subdomain from hostname and rewrites URL to store page
  * Example: omega.downxtown.com → /store/omega
  */
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
-  
+
+  // Skip middleware for Vercel deployment URLs
+  if (isVercelDeployment(hostname)) {
+    return NextResponse.next();
+  }
+
   // Extract subdomain from hostname
   const subdomain = getSubdomain(hostname);
-  
+
   // If subdomain exists and it's not 'www', treat it as a store
   if (subdomain && subdomain !== 'www') {
     // Rewrite to store page with subdomain as parameter
     url.pathname = `/store/${subdomain}`;
     return NextResponse.rewrite(url);
   }
-  
+
   return NextResponse.next();
+}
+
+/**
+ * Check if the hostname is a Vercel deployment URL
+ *
+ * Examples:
+ * - "webstore-lac.vercel.app" → true
+ * - "webstore-oci1ldoyk-mufaases-projects.vercel.app" → true
+ * - "omega.downxtown.com" → false
+ */
+function isVercelDeployment(hostname: string): boolean {
+  return hostname.includes('.vercel.app') ||
+         hostname.includes('vercel.app') ||
+         hostname === 'localhost' ||
+         hostname.startsWith('localhost:');
 }
 
 /**

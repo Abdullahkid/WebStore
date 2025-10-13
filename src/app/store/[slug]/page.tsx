@@ -114,22 +114,24 @@ async function fetchStoreByIdentifier(identifier: string) {
     switch (identifierType) {
       case 'subdomain':
         // Fetch by subdomain (most common via middleware)
+        // Use revalidate instead of no-store to enable ISR
         response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-subdomain/${identifier}`,
-          { cache: 'no-store' }
+          { next: { revalidate: 3600 } } // Revalidate every hour
         );
         break;
-        
+
       case 'id':
         // Fetch by MongoDB ID (legacy support)
         response = await apiClient.getStoreProfile(identifier);
         return response;
-        
+
       case 'username':
         // Fetch by username (fallback)
+        // Use revalidate instead of no-store to enable ISR
         response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-username/${identifier}`,
-          { cache: 'no-store' }
+          { next: { revalidate: 3600 } } // Revalidate every hour
         );
         break;
     }
