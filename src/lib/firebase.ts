@@ -1,6 +1,6 @@
 // Firebase configuration and initialization
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -13,18 +13,19 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase only once
-let app;
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-} catch (error) {
-  console.error('Firebase initialization error:', error);
-  throw new Error(`Firebase configuration invalid: ${error}`);
+// Initialize Firebase only on client side
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+
+if (typeof window !== 'undefined') {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+  }
 }
 
-// Initialize Firebase Auth
-export const auth = getAuth(app);
-
-
-
+// Export with fallback for server-side
+export { auth };
 export default app;

@@ -11,6 +11,15 @@ const nextConfig = {
     // Disable cache to prevent corruption issues
     config.cache = false;
     
+    // Fix Firebase on server side - exclude from server bundle
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'firebase/app': false,
+        'firebase/auth': false,
+      };
+    }
+    
     // Additional optimizations for production builds
     if (!dev) {
       config.optimization = {
