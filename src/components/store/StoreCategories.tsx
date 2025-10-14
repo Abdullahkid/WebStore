@@ -5,6 +5,7 @@ import { ChevronRight, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { apiClient } from '@/lib/api/client';
+import { storeStorage } from '@/lib/storage/storeStorage';
 import type { StoreCategoriesResponse, StoreCategoryResponse } from '@/lib/types';
 
 interface StoreCategoriesProps {
@@ -62,6 +63,16 @@ export default function StoreCategories({ storeId, initialData }: StoreCategorie
   const [hasNext, setHasNext] = useState(initialData?.hasNext || false);
 
   const loadCategories = async (page: number = 1, append = false) => {
+    // Try loading from cache first (only for first page, not appending)
+    if (page === 1 && !append) {
+      const cached = await storeStorage.getStoreCategories(storeId);
+      if (cached.valid && cached.data) {
+        console.log('✅ Using cached categories');
+        setCategories(cached.data.categories);
+        // Don't set loading to false yet - fetch fresh data in background
+      }
+    }
+
     setLoading(true);
     try {
       const response = await apiClient.getStoreCategories(storeId, page, 12);
@@ -75,6 +86,15 @@ export default function StoreCategories({ storeId, initialData }: StoreCategorie
         setCurrentPage(response.data.currentPage);
         setTotalPages(response.data.totalPages);
         setHasNext(response.data.hasNext);
+
+        // Cache the categories (only cache first load with all items)
+        if (page === 1 && !append) {
+          await storeStorage.saveStoreCategories(
+            storeId,
+            response.data.items,
+            response.data.totalItems
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to load categories:', error);

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { apiClient } from '@/lib/api/client';
+import { storeStorage } from '@/lib/storage/storeStorage';
 import type { PaginatedStoreReviewsResponse, StoreReview } from '@/lib/types';
 
 interface StoreReviewsProps {
@@ -188,6 +189,18 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
   const [hasNextPage, setHasNextPage] = useState(initialData?.hasNextPage || false);
 
   const loadReviews = async (page: number = 1, append = false) => {
+    // Try loading from cache first (only for page 1, not appending)
+    if (page === 1 && !append) {
+      const cached = await storeStorage.getStoreReviews(storeId, page);
+      if (cached.valid && cached.data) {
+        console.log('✅ Using cached reviews');
+        setReviews(cached.data.reviews);
+        setStats(cached.data.stats);
+        setHasNextPage(cached.data.hasNextPage);
+        // Don't set loading to false yet - fetch fresh data in background
+      }
+    }
+
     setLoading(true);
     try {
       const response = await apiClient.getStoreReviews(
@@ -205,6 +218,19 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
         }
         setCurrentPage(response.currentPage || page);
         setHasNextPage(response.hasNextPage || false);
+
+        // Cache the reviews (only cache page 1)
+        if (page === 1 && !append) {
+          await storeStorage.saveStoreReviews(
+            storeId,
+            page,
+            response.reviews,
+            response.stats,
+            response.totalPages,
+            response.totalReviews,
+            response.hasNextPage || false
+          );
+        }
       } else {
         setReviews([]);
         setStats(undefined);

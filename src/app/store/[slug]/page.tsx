@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { SEO_CONFIG } from '@/lib/constants';
 import StoreProfilePage from '@/components/store/StoreProfilePage';
+import StoreCacheHandler from '@/components/store/StoreCacheHandler';
 import type { StorePageProps } from '@/lib/types';
 
 // Helper function to detect identifier type (moved up for use in generateMetadata)
@@ -247,7 +248,15 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
+
+      {/* Cache handler - saves data to IndexedDB on client side */}
+      <StoreCacheHandler
+        storeData={storeData}
+        initialProductsData={initialProductsData || undefined}
+        initialCategoriesData={initialCategoriesData || undefined}
+        initialReviewsData={initialReviewsData || undefined}
+      />
+
       {/* Main store profile component */}
       <StoreProfilePage
         storeData={storeData}

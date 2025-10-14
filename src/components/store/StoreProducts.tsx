@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { apiClient } from '@/lib/api/client';
+import { storeStorage } from '@/lib/storage/storeStorage';
 import type { StoreProductsResponse, MiniProduct, StoreSortOption } from '@/lib/types';
 
 interface StoreProductsProps {
@@ -133,6 +134,19 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
   ];
 
   const loadProducts = async (page: number = 1, sort: StoreSortOption = sortBy, append = false) => {
+    // Try loading from cache first (only for page 1 and RECENT sort)
+    if (page === 1 && sort === 'RECENT' && !append) {
+      const cached = await storeStorage.getStoreProducts(storeId, page);
+      if (cached.valid && cached.data) {
+        console.log('✅ Using cached products');
+        setProducts(cached.data.products);
+        setCurrentPage(cached.data.page);
+        setTotalPages(cached.data.totalPages);
+        setHasNextPage(cached.data.hasNextPage);
+        // Don't set loading to false yet - fetch fresh data in background
+      }
+    }
+
     setLoading(true);
     try {
       const response = await apiClient.getStoreProducts(storeId, page, 20, sort);
@@ -146,6 +160,18 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
         setCurrentPage(response.data.currentPage);
         setTotalPages(response.data.totalPages);
         setHasNextPage(response.data.hasNextPage);
+
+        // Cache the products (only cache page 1 for now)
+        if (page === 1) {
+          await storeStorage.saveStoreProducts(
+            storeId,
+            page,
+            response.data.products,
+            response.data.totalPages,
+            response.data.totalProducts,
+            response.data.hasNextPage
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to load products:', error);
