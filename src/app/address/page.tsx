@@ -9,6 +9,8 @@ import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { signInWithCustomToken } from 'firebase/auth';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
+
 export default function AddressPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,7 +108,7 @@ export default function AddressPage() {
   const fetchExistingAddress = async (initialToken: string) => {
     try {
       setIsFetchingAddress(true);
-      const response = await fetch('https://downxtown.com/user/address', {
+      const response = await fetch(`${API_BASE_URL}/user/address`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${initialToken}`,
@@ -153,7 +155,7 @@ export default function AddressPage() {
         return;
       }
 
-      const response = await fetch('https://downxtown.com/user/address', {
+      const response = await fetch(`${API_BASE_URL}/user/address`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -237,7 +239,7 @@ export default function AddressPage() {
         return;
       }
 
-      const response = await fetch('https://downxtown.com/user/address', {
+      const response = await fetch(`${API_BASE_URL}/user/address`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

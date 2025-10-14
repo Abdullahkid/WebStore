@@ -6,7 +6,7 @@ import { PhonePasswordLoginResponse, AccountType } from '@/types/user';
 import { showToast } from '@/lib/toast';
 
 class AuthService {
-  private readonly API_BASE_URL = 'https://downxtown.com';
+  private readonly API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
 
   /**
    * Login with phone and password

@@ -34,6 +34,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { auth } from '@/lib/firebase';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
+
 interface ProductDetailPageProps {
   productId: string;
 }
@@ -72,7 +74,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       console.log('Fetching product details for ID:', productId);
 
       // Direct backend call - same as Android implementation
-      const backendUrl = `https://downxtown.com/api/v1/products/${productId}/page`;
+      const backendUrl = `${API_BASE_URL}/api/v1/products/${productId}/page`;
       console.log('Making direct request to backend:', backendUrl);
 
       const response = await fetch(backendUrl, {
@@ -321,7 +323,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       if (!auth?.currentUser) return false;
 
       const token = await auth.currentUser.getIdToken();
-      const response = await fetch('https://downxtown.com/user/address', {
+      const response = await fetch(`${API_BASE_URL}/user/address`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

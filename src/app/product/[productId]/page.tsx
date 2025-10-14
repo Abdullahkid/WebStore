@@ -8,11 +8,13 @@ interface ProductPageProps {
   };
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   try {
     // Make direct request to the Ktor backend
-    const response = await fetch(`https://downxtown.com/api/v1/products/${params.productId}/page`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/products/${params.productId}/page`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
@@ -31,8 +33,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       openGraph: {
         title: product.title,
         description: product.description,
-        images: product.defaultImages.length > 0 
-          ? [`https://downxtown.com/get-preview-image/${product.defaultImages[0]}`]
+        images: product.defaultImages.length > 0
+          ? [`${API_BASE_URL}/get-preview-image/${product.defaultImages[0]}`]
           : [],
         type: 'website',
       },
@@ -40,8 +42,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         card: 'summary_large_image',
         title: product.title,
         description: product.description,
-        images: product.defaultImages.length > 0 
-          ? [`https://downxtown.com/get-preview-image/${product.defaultImages[0]}`]
+        images: product.defaultImages.length > 0
+          ? [`${API_BASE_URL}/get-preview-image/${product.defaultImages[0]}`]
           : [],
       },
     };
