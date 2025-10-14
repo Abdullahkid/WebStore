@@ -135,13 +135,19 @@ async function fetchStoreByIdentifier(identifier: string) {
         );
         break;
     }
-    
+
     if (!response.ok) {
       return { success: false, storeProfile: null };
     }
-    
-    const storeProfile = await response.json();
-    return { success: true, storeProfile };
+
+    // Parse the response - server now returns wrapped response: { success, message, storeProfile }
+    const responseData = await response.json();
+
+    // Return in the expected format
+    return {
+      success: responseData.success || false,
+      storeProfile: responseData.storeProfile || null
+    };
     
   } catch (error) {
     console.error(`Error fetching store by ${identifierType}:`, error);
@@ -168,10 +174,11 @@ export default async function StorePage({ params, searchParams }: StorePageProps
     storeData = storeResponse.storeProfile;
 
     // Fetch initial data for tabs in parallel for better performance
+    // IMPORTANT: Use storeData.id (MongoDB ObjectId), not params.slug (which could be subdomain)
     const [productsResponse, categoriesResponse, reviewsResponse] = await Promise.allSettled([
-      apiClient.getStoreProducts(params.slug, 1, 12),
-      apiClient.getStoreCategories(params.slug, 1, 8),
-      apiClient.getStoreReviews(params.slug, 1, 5),
+      apiClient.getStoreProducts(storeData.id, 1, 12),
+      apiClient.getStoreCategories(storeData.id, 1, 8),
+      apiClient.getStoreReviews(storeData.id, 1, 5),
     ]);
 
     // Extract successful responses
@@ -245,7 +252,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         initialProductsData={initialProductsData || undefined}
         initialCategoriesData={initialCategoriesData || undefined}
         initialReviewsData={initialReviewsData || undefined}
-        storeId={params.slug}
+        storeId={storeData.id}
         error={error}
       />
     </>

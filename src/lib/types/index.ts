@@ -267,7 +267,7 @@ export interface Address {
 }
 
 // Indian States List
-export const INDIAN_STATES = [
+const INDIAN_STATES_UNSORTED = [
   "Andaman and Nicobar Islands",
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -303,5 +303,7 @@ export const INDIAN_STATES = [
   "Tripura",
   "Uttar Pradesh",
   "Uttarakhand",
-  "West Bengal"
-].sort() as const;
+  "West Bengal",
+] as const;
+
+export const INDIAN_STATES = [...INDIAN_STATES_UNSORTED].sort();

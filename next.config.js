@@ -85,11 +85,17 @@ const nextConfig = {
   
   // Image optimization settings
   images: {
-    domains: ['localhost', 'downxtown.com'],
+    domains: ['localhost', 'downxtown.com', '192.168.29.10'],
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
+        port: '8080',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '192.168.29.10',
         port: '8080',
         pathname: '/**',
       },

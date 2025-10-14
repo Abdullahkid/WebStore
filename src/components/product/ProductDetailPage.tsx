@@ -318,7 +318,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   const checkUserHasAddress = async (): Promise<boolean> => {
     try {
-      if (!auth.currentUser) return false;
+      if (!auth?.currentUser) return false;
 
       const token = await auth.currentUser.getIdToken();
       const response = await fetch('https://downxtown.com/user/address', {
@@ -597,7 +597,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 <Button
                   onClick={() => {
                     const message = `Hi, I'm interested in ${product.title}`;
-                    const whatsappUrl = `https://wa.me/${product.storeInfo.phoneNumber}?text=${encodeURIComponent(message)}`;
+                    const whatsappUrl = `https://wa.me/${product.storeInfo.businessId}?text=${encodeURIComponent(message)}`;
                     window.open(whatsappUrl, '_blank');
                   }}
                   className="flex-1 h-14 font-semibold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl rounded-xl transform hover:scale-105 flex items-center justify-center gap-2"
