@@ -189,15 +189,50 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
   const [hasNextPage, setHasNextPage] = useState(initialData?.hasNextPage || false);
 
   const loadReviews = async (page: number = 1, append = false) => {
-    // Try loading from cache first (only for page 1, not appending)
-    if (page === 1 && !append) {
-      const cached = await storeStorage.getStoreReviews(storeId, page);
-      if (cached.valid && cached.data) {
-        console.log('✅ Using cached reviews');
-        setReviews(cached.data.reviews);
-        setStats(cached.data.stats);
-        setHasNextPage(cached.data.hasNextPage);
-        // Don't set loading to false yet - fetch fresh data in background
+    // Try loading from cache first
+    if (!append) {
+      // For initial load (page 1), try to load ALL cached pages for infinite scroll restoration
+      if (page === 1) {
+        const allCachedReviews: StoreReview[] = [];
+        let lastValidPage = 0;
+        let cachedStats = undefined;
+
+        // Try to load up to 3 pages from cache (reviews are less frequently scrolled)
+        for (let p = 1; p <= 3; p++) {
+          const cached = await storeStorage.getStoreReviews(storeId, p);
+          if (cached.valid && cached.data) {
+            allCachedReviews.push(...cached.data.reviews);
+            lastValidPage = p;
+
+            // Keep stats from first page
+            if (p === 1) {
+              cachedStats = cached.data.stats;
+            }
+          } else {
+            break; // Stop at first cache miss
+          }
+        }
+
+        // If we have cached reviews, show them immediately
+        if (allCachedReviews.length > 0) {
+          console.log(`✅ Restored ${allCachedReviews.length} cached reviews (${lastValidPage} pages)`);
+          setReviews(allCachedReviews);
+          setStats(cachedStats);
+          setCurrentPage(lastValidPage);
+          setHasNextPage(true); // Assume there might be more
+          // Don't set loading to false yet - fetch fresh data in background
+        }
+      } else {
+        // For "Load More" (page > 1), check if this specific page is cached
+        const cached = await storeStorage.getStoreReviews(storeId, page);
+        if (cached.valid && cached.data) {
+          const cachedData = cached.data; // TypeScript type narrowing
+          console.log(`✅ Using cached reviews page ${page}`);
+          setReviews(prev => [...prev, ...cachedData.reviews]);
+          setCurrentPage(cachedData.page);
+          setHasNextPage(cachedData.hasNextPage);
+          // Still fetch fresh in background
+        }
       }
     }
 
@@ -219,18 +254,16 @@ export default function StoreReviews({ storeId, initialData }: StoreReviewsProps
         setCurrentPage(response.currentPage || page);
         setHasNextPage(response.hasNextPage || false);
 
-        // Cache the reviews (only cache page 1)
-        if (page === 1 && !append) {
-          await storeStorage.saveStoreReviews(
-            storeId,
-            page,
-            response.reviews,
-            response.stats,
-            response.totalPages,
-            response.totalReviews,
-            response.hasNextPage || false
-          );
-        }
+        // Cache EVERY page for infinite scroll restoration
+        await storeStorage.saveStoreReviews(
+          storeId,
+          page,
+          response.reviews,
+          response.stats,
+          response.totalPages,
+          response.totalReviews,
+          response.hasNextPage || false
+        );
       } else {
         setReviews([]);
         setStats(undefined);

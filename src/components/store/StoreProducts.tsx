@@ -134,16 +134,48 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
   ];
 
   const loadProducts = async (page: number = 1, sort: StoreSortOption = sortBy, append = false) => {
-    // Try loading from cache first (only for page 1 and RECENT sort)
-    if (page === 1 && sort === 'RECENT' && !append) {
-      const cached = await storeStorage.getStoreProducts(storeId, page);
-      if (cached.valid && cached.data) {
-        console.log('✅ Using cached products');
-        setProducts(cached.data.products);
-        setCurrentPage(cached.data.page);
-        setTotalPages(cached.data.totalPages);
-        setHasNextPage(cached.data.hasNextPage);
-        // Don't set loading to false yet - fetch fresh data in background
+    // Try loading from cache first (only for RECENT sort)
+    if (sort === 'RECENT' && !append) {
+      // For initial load (page 1), try to load ALL cached pages for infinite scroll restoration
+      if (page === 1) {
+        const allCachedProducts: MiniProduct[] = [];
+        let lastValidPage = 0;
+
+        // Try to load up to 5 pages from cache (most users don't scroll beyond this)
+        for (let p = 1; p <= 5; p++) {
+          const cached = await storeStorage.getStoreProducts(storeId, p);
+          if (cached.valid && cached.data) {
+            allCachedProducts.push(...cached.data.products);
+            lastValidPage = p;
+
+            // Update state with cached metadata from last page
+            if (p === 1) {
+              setTotalPages(cached.data.totalPages);
+            }
+          } else {
+            break; // Stop at first cache miss
+          }
+        }
+
+        // If we have cached products, show them immediately
+        if (allCachedProducts.length > 0) {
+          console.log(`✅ Restored ${allCachedProducts.length} cached products (${lastValidPage} pages)`);
+          setProducts(allCachedProducts);
+          setCurrentPage(lastValidPage);
+          setHasNextPage(lastValidPage < totalPages);
+          // Don't set loading to false yet - fetch fresh data in background
+        }
+      } else {
+        // For "Load More" (page > 1), check if this specific page is cached
+        const cached = await storeStorage.getStoreProducts(storeId, page);
+        if (cached.valid && cached.data) {
+          const cachedData = cached.data; // TypeScript type narrowing
+          console.log(`✅ Using cached products page ${page}`);
+          setProducts(prev => [...prev, ...cachedData.products]);
+          setCurrentPage(cachedData.page);
+          setHasNextPage(cachedData.hasNextPage);
+          // Still fetch fresh in background
+        }
       }
     }
 
@@ -161,8 +193,8 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
         setTotalPages(response.data.totalPages);
         setHasNextPage(response.data.hasNextPage);
 
-        // Cache the products (only cache page 1 for now)
-        if (page === 1) {
+        // Cache EVERY page for infinite scroll restoration (only for RECENT sort)
+        if (sort === 'RECENT') {
           await storeStorage.saveStoreProducts(
             storeId,
             page,
