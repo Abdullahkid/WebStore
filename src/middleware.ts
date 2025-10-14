@@ -21,7 +21,25 @@ export function middleware(request: NextRequest) {
 
   // If subdomain exists and it's not 'www', treat it as a store
   if (subdomain && subdomain !== 'www') {
-    // Rewrite to store page with subdomain as parameter
+    // IMPORTANT: Don't rewrite if path already starts with /product, /api, /checkout, /address, etc.
+    // These are application routes that should work across all subdomains
+    const path = url.pathname;
+    if (
+      path.startsWith('/product') ||
+      path.startsWith('/api') ||
+      path.startsWith('/checkout') ||
+      path.startsWith('/address') ||
+      path.startsWith('/login') ||
+      path.startsWith('/signup') ||
+      path.startsWith('/_next') ||
+      path.startsWith('/favicon')
+    ) {
+      // Let these routes pass through without rewriting
+      return NextResponse.next();
+    }
+
+    // Only rewrite root path or /store paths to the subdomain store page
+    // Example: sigma.downxtown.com/ → /store/sigma
     url.pathname = `/store/${subdomain}`;
     return NextResponse.rewrite(url);
   }
