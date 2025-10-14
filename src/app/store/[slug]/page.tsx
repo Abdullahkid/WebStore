@@ -5,11 +5,78 @@ import { SEO_CONFIG } from '@/lib/constants';
 import StoreProfilePage from '@/components/store/StoreProfilePage';
 import type { StorePageProps } from '@/lib/types';
 
+// Helper function to detect identifier type (moved up for use in generateMetadata)
+function detectIdentifierType(identifier: string): 'subdomain' | 'id' | 'username' {
+  // MongoDB ObjectId pattern (24 hex characters)
+  const isMongoId = /^[0-9a-fA-F]{24}$/.test(identifier);
+  if (isMongoId) return 'id';
+
+  // Subdomain pattern (3-30 chars, lowercase, alphanumeric + hyphens, no underscores)
+  const isSubdomain = /^[a-z0-9-]{3,30}$/.test(identifier) && !identifier.includes('_');
+  if (isSubdomain) return 'subdomain';
+
+  // Username pattern (has underscore)
+  return 'username';
+}
+
+// Helper function to fetch store by identifier type (moved up for use in generateMetadata)
+async function fetchStoreByIdentifier(identifier: string) {
+  const identifierType = detectIdentifierType(identifier);
+
+  try {
+    let response;
+
+    switch (identifierType) {
+      case 'subdomain':
+        // Fetch by subdomain (most common via middleware)
+        // Use revalidate instead of no-store to enable ISR
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-subdomain/${identifier}`,
+          { next: { revalidate: 3600 } } // Revalidate every hour
+        );
+        break;
+
+      case 'id':
+        // Fetch by MongoDB ID (legacy support)
+        response = await apiClient.getStoreProfile(identifier);
+        return response;
+
+      case 'username':
+        // Fetch by username (fallback)
+        // Use revalidate instead of no-store to enable ISR
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-username/${identifier}`,
+          { next: { revalidate: 3600 } } // Revalidate every hour
+        );
+        break;
+    }
+
+    if (!response.ok) {
+      return { success: false, storeProfile: null };
+    }
+
+    // Parse the response - server now returns wrapped response: { success, message, storeProfile }
+    const responseData = await response.json();
+
+    // Return in the expected format
+    return {
+      success: responseData.success || false,
+      storeProfile: responseData.storeProfile || null
+    };
+
+  } catch (error) {
+    console.error(`Error fetching store by ${identifierType}:`, error);
+    return { success: false, storeProfile: null };
+  }
+}
+
 // Generate metadata for SEO and OpenGraph
 export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
   try {
-    const response = await apiClient.getStoreProfile(params.slug);
-    
+    // Use fetchStoreByIdentifier instead of apiClient.getStoreProfile
+    // This supports subdomain, username, and ID
+    const response = await fetchStoreByIdentifier(params.slug);
+
     if (!response.success || !response.storeProfile) {
       return {
         title: 'Store Not Found - Downxtown',
@@ -87,71 +154,6 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
       title: 'Store - Downxtown',
       description: SEO_CONFIG.defaultDescription,
     };
-  }
-}
-
-// Helper function to detect identifier type
-function detectIdentifierType(identifier: string): 'subdomain' | 'id' | 'username' {
-  // MongoDB ObjectId pattern (24 hex characters)
-  const isMongoId = /^[0-9a-fA-F]{24}$/.test(identifier);
-  if (isMongoId) return 'id';
-  
-  // Subdomain pattern (3-30 chars, lowercase, alphanumeric + hyphens, no underscores)
-  const isSubdomain = /^[a-z0-9-]{3,30}$/.test(identifier) && !identifier.includes('_');
-  if (isSubdomain) return 'subdomain';
-  
-  // Username pattern (has underscore)
-  return 'username';
-}
-
-// Helper function to fetch store by identifier type
-async function fetchStoreByIdentifier(identifier: string) {
-  const identifierType = detectIdentifierType(identifier);
-  
-  try {
-    let response;
-    
-    switch (identifierType) {
-      case 'subdomain':
-        // Fetch by subdomain (most common via middleware)
-        // Use revalidate instead of no-store to enable ISR
-        response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-subdomain/${identifier}`,
-          { next: { revalidate: 3600 } } // Revalidate every hour
-        );
-        break;
-
-      case 'id':
-        // Fetch by MongoDB ID (legacy support)
-        response = await apiClient.getStoreProfile(identifier);
-        return response;
-
-      case 'username':
-        // Fetch by username (fallback)
-        // Use revalidate instead of no-store to enable ISR
-        response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com'}/api/v1/store/by-username/${identifier}`,
-          { next: { revalidate: 3600 } } // Revalidate every hour
-        );
-        break;
-    }
-
-    if (!response.ok) {
-      return { success: false, storeProfile: null };
-    }
-
-    // Parse the response - server now returns wrapped response: { success, message, storeProfile }
-    const responseData = await response.json();
-
-    // Return in the expected format
-    return {
-      success: responseData.success || false,
-      storeProfile: responseData.storeProfile || null
-    };
-    
-  } catch (error) {
-    console.error(`Error fetching store by ${identifierType}:`, error);
-    return { success: false, storeProfile: null };
   }
 }
 
