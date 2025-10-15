@@ -103,18 +103,13 @@ class ApiClient {
     });
 
     const endpoint = `${API_CONFIG.endpoints.storeCategories(storeId)}/${categoryId}/products?${params}`;
-    const fullUrl = `${this.baseUrl}${endpoint}`;
-    console.log('🌐 Calling API:', fullUrl);
-
     const response = await this.request<any>(endpoint);
-
-    console.log('🔍 API Response for category products:', JSON.stringify(response, null, 2));
 
     // The API returns { success, message, data: { category, products: { items, currentPage, limit, totalItems, totalPages, hasNext, hasPrevPage } } }
     // Transform to match StoreProductsResponse format
     if (response.success && response.data && response.data.products) {
       const productsData = response.data.products;
-      const transformedData = {
+      return {
         success: true,
         data: {
           products: productsData.items || [],
@@ -125,11 +120,8 @@ class ApiClient {
           hasPreviousPage: productsData.hasPrevPage || false,
         }
       };
-      console.log('✅ Transformed data:', JSON.stringify(transformedData, null, 2));
-      return transformedData;
     }
 
-    console.log('❌ Response not successful or no data');
     return response;
   }
 

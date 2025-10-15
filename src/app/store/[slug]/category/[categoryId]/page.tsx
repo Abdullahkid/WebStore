@@ -32,25 +32,13 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   let initialProducts = null;
   let error = null;
 
-  console.log('🔍 [SSR] Fetching category products with:', {
-    storeId,
-    categoryId: params.categoryId,
-    categoryName,
-    storeName,
-  });
-
   try {
     const response = await apiClient.getCategoryProducts(storeId, params.categoryId, 1, 20);
-    console.log('📦 [SSR] API Response:', JSON.stringify(response, null, 2));
-
     if (response.success && response.data) {
       initialProducts = response.data;
-      console.log('✅ [SSR] Successfully loaded products:', initialProducts.products.length);
-    } else {
-      console.log('❌ [SSR] Response unsuccessful or no data');
     }
   } catch (err) {
-    console.error('❌ [SSR] Error fetching category products:', err);
+    console.error('Error fetching category products:', err);
     error = 'Failed to load products';
   }
 

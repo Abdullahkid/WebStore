@@ -115,7 +115,16 @@ export default function StoreCategories({ storeId, initialData, storeName }: Sto
 
   const handleCategoryClick = (category: StoreCategoryResponse) => {
     // Navigate to category products page
-    const baseUrl = pathname || `/store/${storeId}`;
+    // Construct URL based on current location
+    // If on subdomain (e.g., sigma.downxtown.com), pathname will be "/"
+    // If on main domain (e.g., downxtown.com/store/sigma), pathname will be "/store/sigma"
+    let baseUrl = pathname;
+
+    // If pathname is just "/" (subdomain), we don't need a base path
+    if (baseUrl === '/') {
+      baseUrl = '';
+    }
+
     const categoryUrl = `${baseUrl}/category/${category.id}?name=${encodeURIComponent(category.name)}&storeId=${storeId}${storeName ? `&store=${encodeURIComponent(storeName)}` : ''}`;
     router.push(categoryUrl);
   };
