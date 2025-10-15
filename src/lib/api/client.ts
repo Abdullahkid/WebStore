@@ -155,6 +155,17 @@ class ApiClient {
     return response.data;
   }
 
+  async getStoreReviewStats(storeId: string) {
+    // The backend returns: ApiResponse<ReviewStats>
+    // Structure: { success: boolean, message: string, data: ReviewStats }
+    const response = await this.request<{ success: boolean; message: string; data: any }>(
+      API_CONFIG.endpoints.storeReviewStats(storeId)
+    );
+
+    // Unwrap the data from the ApiResponse wrapper
+    return response.data;
+  }
+
   // Follow/Unfollow Methods (require authentication)
   async followStore(storeId: string, authToken: string): Promise<{ success: boolean; message: string }> {
     return this.request<{ success: boolean; message: string }>(

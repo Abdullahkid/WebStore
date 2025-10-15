@@ -178,17 +178,18 @@ export default async function StorePage({ params, searchParams }: StorePageProps
 
     // Fetch initial data for tabs in parallel for better performance
     // IMPORTANT: Use storeData.id (MongoDB ObjectId), not params.slug (which could be subdomain)
-    const [productsResponse, categoriesResponse, reviewsResponse] = await Promise.allSettled([
+    const [productsResponse, categoriesResponse, reviewsResponse, statsResponse] = await Promise.allSettled([
       apiClient.getStoreProducts(storeData.id, 1, 12),
       apiClient.getStoreCategories(storeData.id, 1, 8),
       apiClient.getStoreReviews(storeData.id, 1, 5),
+      apiClient.getStoreReviewStats(storeData.id), // Fetch stats separately like Android app does
     ]);
 
     // Extract successful responses
     if (productsResponse.status === 'fulfilled' && productsResponse.value.success) {
       initialProductsData = productsResponse.value.data;
     }
-    
+
     if (categoriesResponse.status === 'fulfilled' && categoriesResponse.value.success) {
       initialCategoriesData = categoriesResponse.value.data;
     }
@@ -196,6 +197,14 @@ export default async function StorePage({ params, searchParams }: StorePageProps
     if (reviewsResponse.status === 'fulfilled') {
       console.log('Reviews response from server:', reviewsResponse.value);
       initialReviewsData = reviewsResponse.value;
+
+      // Merge stats from separate API call into reviews data (Android app fetches separately)
+      if (statsResponse.status === 'fulfilled') {
+        console.log('Stats response from server:', statsResponse.value);
+        initialReviewsData.stats = statsResponse.value;
+      } else {
+        console.error('Stats request failed:', statsResponse.status === 'rejected' ? statsResponse.reason : 'Unknown error');
+      }
     } else if (reviewsResponse.status === 'rejected') {
       console.error('Reviews request failed:', reviewsResponse.reason);
     }
