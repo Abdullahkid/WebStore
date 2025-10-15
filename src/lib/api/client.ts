@@ -145,9 +145,14 @@ class ApiClient {
       params.append('rating', rating.toString());
     }
 
-    return this.request<PaginatedStoreReviewsResponse>(
+    // The backend returns: ApiResponse<PaginatedStoreReviewsResponse>
+    // Structure: { success: boolean, message: string, data: PaginatedStoreReviewsResponse }
+    const response = await this.request<{ success: boolean; message: string; data: PaginatedStoreReviewsResponse }>(
       `${API_CONFIG.endpoints.storeReviews(storeId)}?${params}`
     );
+
+    // Unwrap the data from the ApiResponse wrapper
+    return response.data;
   }
 
   // Follow/Unfollow Methods (require authentication)

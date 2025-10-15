@@ -173,15 +173,15 @@ export interface StoreCategoriesResponse {
 
 // Store Review Data
 export interface StoreResponse {
-  response: string;
+  message: string; // Backend uses 'message', not 'response'
   responderName: string;
   respondedAt: number;
 }
 
 export interface StoreReview {
   id: string;
-  storeId: string;
-  customerId: string;
+  storeId?: string;
+  customerId?: string;
   customerName: string;
   customerAvatar?: string;
   rating: number;
@@ -189,12 +189,12 @@ export interface StoreReview {
   reviewTitle?: string;
   isVerifiedPurchase: boolean;
   orderId?: string;
-  images: string[];
+  images?: string[]; // Optional - not returned in MiniStoreReview from backend
   helpfulCount: number;
   isMarkedHelpfulByCurrentUser: boolean;
   storeResponse?: StoreResponse;
   createdAt: number;
-  updatedAt: number;
+  updatedAt?: number;
 }
 
 export interface ReviewStats {

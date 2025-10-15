@@ -17,7 +17,7 @@ export const API_CONFIG = {
     storeProfile: (storeId: string) => `/stores/${storeId}/profile`,
     storeProducts: (storeId: string) => `/stores/${storeId}/products`,
     storeCategories: (storeId: string) => `/stores/${storeId}/categories`,
-    storeReviews: (storeId: string) => `/stores/${storeId}/reviews`,
+    storeReviews: (storeId: string) => `/api/v1/reviews/stores/${storeId}`,
     followStore: (storeId: string) => `/stores/${storeId}/follow`,
     images: {
       preview: (imageId: string) => `/get-preview-image/${imageId}`,

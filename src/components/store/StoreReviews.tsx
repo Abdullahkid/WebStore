@@ -140,7 +140,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
       <p className="text-[#424242] leading-relaxed mb-4">{review.comment}</p>
 
       {/* Review Images */}
-      {review.images.length > 0 && (
+      {review.images && review.images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
           {review.images.map((imageId, index) => (
             <div key={index} className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-[#E0E0E0]">
@@ -162,7 +162,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             <span className="font-bold text-[#00838F] text-sm">{review.storeResponse.responderName}</span>
             <Badge className="bg-white text-[#00838F] border-[#00BCD4]/20 text-xs">Store Response</Badge>
           </div>
-          <p className="text-sm text-[#212121] leading-relaxed">{review.storeResponse.response}</p>
+          <p className="text-sm text-[#212121] leading-relaxed">{review.storeResponse.message}</p>
         </div>
       )}
 
