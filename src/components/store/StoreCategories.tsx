@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ChevronRight, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
@@ -13,6 +13,7 @@ interface StoreCategoriesProps {
   storeId: string;
   initialData?: StoreCategoriesResponse['data'];
   storeName?: string;
+  storeSlug?: string;
 }
 
 interface CategoryCardProps {
@@ -57,9 +58,8 @@ const CategoryCard = ({ category, onClick }: CategoryCardProps) => {
   );
 };
 
-export default function StoreCategories({ storeId, initialData, storeName }: StoreCategoriesProps) {
+export default function StoreCategories({ storeId, initialData, storeName, storeSlug }: StoreCategoriesProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const [categories, setCategories] = useState<StoreCategoryResponse[]>(initialData?.items || []);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialData?.currentPage || 1);
@@ -115,17 +115,11 @@ export default function StoreCategories({ storeId, initialData, storeName }: Sto
 
   const handleCategoryClick = (category: StoreCategoryResponse) => {
     // Navigate to category products page
-    // Construct URL based on current location
-    // If on subdomain (e.g., sigma.downxtown.com), pathname will be "/"
-    // If on main domain (e.g., downxtown.com/store/sigma), pathname will be "/store/sigma"
-    let baseUrl = pathname;
-
-    // If pathname is just "/" (subdomain), we don't need a base path
-    if (baseUrl === '/') {
-      baseUrl = '';
-    }
-
-    const categoryUrl = `${baseUrl}/category/${category.id}?name=${encodeURIComponent(category.name)}&storeId=${storeId}${storeName ? `&store=${encodeURIComponent(storeName)}` : ''}`;
+    // Build URL directly without relying on pathname (which can accumulate /category paths)
+    // If storeSlug is provided, we're on main domain: /store/{slug}/category/{id}
+    // Otherwise, we're on subdomain: /category/{id}
+    const basePath = storeSlug ? `/store/${storeSlug}` : '';
+    const categoryUrl = `${basePath}/category/${category.id}?name=${encodeURIComponent(category.name)}&storeId=${storeId}${storeName ? `&store=${encodeURIComponent(storeName)}` : ''}`;
     router.push(categoryUrl);
   };
 

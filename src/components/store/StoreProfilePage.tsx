@@ -24,6 +24,7 @@ interface StoreProfilePageProps {
   initialCategoriesData?: StoreCategoriesResponse['data'];
   initialReviewsData?: PaginatedStoreReviewsResponse;
   storeId: string;
+  storeSlug?: string;
   error?: string | null;
 }
 
@@ -33,6 +34,7 @@ export default function StoreProfilePage({
   initialCategoriesData,
   initialReviewsData,
   storeId,
+  storeSlug,
   error,
 }: StoreProfilePageProps) {
   const [activeTab, setActiveTab] = useState<string>(STORE_TABS.PRODUCTS);
@@ -266,6 +268,7 @@ export default function StoreProfilePage({
                   storeId={storeId}
                   initialData={initialCategoriesData}
                   storeName={storeData.storeName}
+                  storeSlug={storeSlug}
                 />
               )}
 

@@ -264,6 +264,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         initialCategoriesData={initialCategoriesData || undefined}
         initialReviewsData={initialReviewsData || undefined}
         storeId={storeData.id}
+        storeSlug={params.slug}
         error={error}
       />
     </>

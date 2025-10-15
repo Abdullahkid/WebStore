@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
 
   // If subdomain exists and it's not 'www', treat it as a store
   if (subdomain && subdomain !== 'www') {
-    // IMPORTANT: Don't rewrite if path already starts with /product, /api, /checkout, /address, etc.
+    // IMPORTANT: Don't rewrite if path already starts with /product, /api, /checkout, /address, /category, etc.
     // These are application routes that should work across all subdomains
     const path = url.pathname;
     if (
@@ -29,6 +29,7 @@ export function middleware(request: NextRequest) {
       path.startsWith('/api') ||
       path.startsWith('/checkout') ||
       path.startsWith('/address') ||
+      path.startsWith('/category') ||
       path.startsWith('/login') ||
       path.startsWith('/signup') ||
       path.startsWith('/_next') ||
