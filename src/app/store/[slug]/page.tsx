@@ -209,11 +209,15 @@ export default async function StorePage({ params, searchParams }: StorePageProps
     notFound();
   }
 
+  // Detect if we're on a subdomain route (don't pass storeSlug in that case)
+  const identifierType = detectIdentifierType(params.slug);
+  const isSubdomainRoute = identifierType === 'subdomain';
+
   // Generate JSON-LD structured data for better SEO
-  const storeUrl = storeData.subdomain 
+  const storeUrl = storeData.subdomain
     ? `https://${storeData.subdomain}.downxtown.com`
     : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://webstore.downxtown.com'}/store/${params.slug}`;
-  
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Store',
@@ -264,7 +268,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         initialCategoriesData={initialCategoriesData || undefined}
         initialReviewsData={initialReviewsData || undefined}
         storeId={storeData.id}
-        storeSlug={params.slug}
+        storeSlug={isSubdomainRoute ? undefined : params.slug}
         error={error}
       />
     </>
