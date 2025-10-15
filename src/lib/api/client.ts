@@ -96,15 +96,41 @@ class ApiClient {
     categoryId: string,
     page: number = 1,
     pageSize: number = 20
-  ): Promise<StoreProductsResponse> {
+  ): Promise<any> {
     const params = new URLSearchParams({
       page: page.toString(),
       pageSize: pageSize.toString(),
     });
 
-    return this.request<StoreProductsResponse>(
-      `${API_CONFIG.endpoints.storeCategories(storeId)}/${categoryId}/products?${params}`
-    );
+    const endpoint = `${API_CONFIG.endpoints.storeCategories(storeId)}/${categoryId}/products?${params}`;
+    const fullUrl = `${this.baseUrl}${endpoint}`;
+    console.log('🌐 Calling API:', fullUrl);
+
+    const response = await this.request<any>(endpoint);
+
+    console.log('🔍 API Response for category products:', JSON.stringify(response, null, 2));
+
+    // The API returns { success, message, data: { category, products: { items, currentPage, limit, totalItems, totalPages, hasNext, hasPrevPage } } }
+    // Transform to match StoreProductsResponse format
+    if (response.success && response.data && response.data.products) {
+      const productsData = response.data.products;
+      const transformedData = {
+        success: true,
+        data: {
+          products: productsData.items || [],
+          currentPage: productsData.currentPage || page,
+          totalPages: productsData.totalPages || 1,
+          totalProducts: productsData.totalItems || 0,
+          hasNextPage: productsData.hasNext || false,
+          hasPreviousPage: productsData.hasPrevPage || false,
+        }
+      };
+      console.log('✅ Transformed data:', JSON.stringify(transformedData, null, 2));
+      return transformedData;
+    }
+
+    console.log('❌ Response not successful or no data');
+    return response;
   }
 
   // Store Reviews Methods

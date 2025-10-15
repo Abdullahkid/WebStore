@@ -265,6 +265,7 @@ export default function StoreProfilePage({
                 <StoreCategories
                   storeId={storeId}
                   initialData={initialCategoriesData}
+                  storeName={storeData.storeName}
                 />
               )}
 

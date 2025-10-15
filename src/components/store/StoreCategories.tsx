@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { ChevronRight, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
@@ -11,6 +12,7 @@ import type { StoreCategoriesResponse, StoreCategoryResponse } from '@/lib/types
 interface StoreCategoriesProps {
   storeId: string;
   initialData?: StoreCategoriesResponse['data'];
+  storeName?: string;
 }
 
 interface CategoryCardProps {
@@ -55,7 +57,9 @@ const CategoryCard = ({ category, onClick }: CategoryCardProps) => {
   );
 };
 
-export default function StoreCategories({ storeId, initialData }: StoreCategoriesProps) {
+export default function StoreCategories({ storeId, initialData, storeName }: StoreCategoriesProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [categories, setCategories] = useState<StoreCategoryResponse[]>(initialData?.items || []);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialData?.currentPage || 1);
@@ -110,8 +114,10 @@ export default function StoreCategories({ storeId, initialData }: StoreCategorie
   };
 
   const handleCategoryClick = (category: StoreCategoryResponse) => {
-    // For web version, we'll just show an alert - in real app this would filter products
-    alert(`Showing products in "${category.name}" category. This would filter the products tab in the full app.`);
+    // Navigate to category products page
+    const baseUrl = pathname || `/store/${storeId}`;
+    const categoryUrl = `${baseUrl}/category/${category.id}?name=${encodeURIComponent(category.name)}&storeId=${storeId}${storeName ? `&store=${encodeURIComponent(storeName)}` : ''}`;
+    router.push(categoryUrl);
   };
 
   // Load initial data if not provided
