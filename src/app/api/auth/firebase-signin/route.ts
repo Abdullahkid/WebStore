@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  AccountType, 
-  FirebaseSignInRequest, 
-  FirebaseSignInResponse 
+import {
+  AccountType,
+  FirebaseSignInRequest,
+  FirebaseSignInResponse
 } from '@/types/auth';
 
 export async function POST(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Check if this is a mock token (for development/testing)
     if (token.startsWith('mock_firebase_token_')) {
       console.log('🔧 Development: Handling mock Firebase token');
-      
+
       // In development, create a mock successful response
       if (process.env.NODE_ENV === 'development') {
         const mockResponse: FirebaseSignInResponse = {
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
 
     try {
       // Make request to Ktor backend (same endpoint as Android)
-      const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://downxtown.com';
+      const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.downxtown.com';
       const fullUrl = `${backendUrl}/api/v1/auth/firebase-signin`;
-      
+
       const backendResponse = await fetch(fullUrl, {
         method: 'POST',
         headers: {
@@ -79,17 +79,17 @@ export async function POST(request: NextRequest) {
       }
 
       const backendData: FirebaseSignInResponse = await backendResponse.json();
-      
+
       // Return the backend response
       return NextResponse.json(backendData);
 
     } catch (backendError) {
       console.error('Backend request failed:', backendError);
-      
+
       // For MVP, return a mock success response if backend is unavailable
       if (process.env.NODE_ENV === 'development') {
         console.log('Falling back to mock response for development');
-        
+
         const mockResponse: FirebaseSignInResponse = {
           success: true,
           accountType,
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(mockResponse);
       }
-      
+
       // In production, return the actual error
       throw backendError;
     }
@@ -121,9 +121,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in Firebase sign-in:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Registration failed'
       },
       { status: 500 }
     );

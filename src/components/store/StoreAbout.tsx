@@ -149,38 +149,38 @@ export default function StoreAbout({ storeData }: StoreAboutProps) {
         </div>
       )}
 
-      {/* Store Policies */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-[#E0F7FA] rounded-lg flex items-center justify-center">
-            <CheckCircle className="w-6 h-6 text-[#00838F]" />
-          </div>
-          <h3 className="text-xl font-bold text-[#212121]">Store Policies</h3>
-        </div>
-        <div className="space-y-3 ml-13">
-          <div className="flex items-start gap-3">
-            <span className="text-lg">✓</span>
-            <div>
-              <p className="font-semibold text-[#212121]">Return Policy</p>
-              <p className="text-[#757575] text-sm">7 days hassle-free returns</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">✓</span>
-            <div>
-              <p className="font-semibold text-[#212121]">Shipping</p>
-              <p className="text-[#757575] text-sm">Free shipping on orders above ₹999</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">✓</span>
-            <div>
-              <p className="font-semibold text-[#212121]">Contact</p>
-              <p className="text-[#757575] text-sm">Available Mon-Sat, 10AM-7PM</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      //{/* Store Policies */}
+      //<div className="mb-8">
+      //  <div className="flex items-center gap-3 mb-4">
+      //    <div className="w-10 h-10 bg-[#E0F7FA] rounded-lg flex items-center justify-center">
+      //      <CheckCircle className="w-6 h-6 text-[#00838F]" />
+      //    </div>
+      //    <h3 className="text-xl font-bold text-[#212121]">Store Policies</h3>
+      //  </div>
+      //  <div className="space-y-3 ml-13">
+      //    <div className="flex items-start gap-3">
+      //      <span className="text-lg">✓</span>
+      //      <div>
+      //        <p className="font-semibold text-[#212121]">Return Policy</p>
+      //        <p className="text-[#757575] text-sm">7 days hassle-free returns</p>
+      //      </div>
+      //    </div>
+      //    <div className="flex items-start gap-3">
+      //      <span className="text-lg">✓</span>
+      //      <div>
+      //        <p className="font-semibold text-[#212121]">Shipping</p>
+      //        <p className="text-[#757575] text-sm">Free shipping on orders above ₹999</p>
+      //      </div>
+      //    </div>
+      //    <div className="flex items-start gap-3">
+      //      <span className="text-lg">✓</span>
+      //      <div>
+      //        <p className="font-semibold text-[#212121]">Contact</p>
+      //        <p className="text-[#757575] text-sm">Available Mon-Sat, 10AM-7PM</p>
+      //      </div>
+      //    </div>
+      //  </div>
+      //</div>
 
       {/* Contact Information */}
       <div className="mb-8">
