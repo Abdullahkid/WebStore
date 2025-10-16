@@ -40,7 +40,8 @@ export default function StoreProfilePage({
   const [activeTab, setActiveTab] = useState<string>(STORE_TABS.PRODUCTS);
 
   const handleContact = () => {
-    window.open(`tel:${storeData.phoneNumber}`, '_self');
+    const phoneNumber = storeData.whatsappNumber ?? storeData.phoneNumber;
+    window.open(`tel:${phoneNumber}`, '_self');
   };
 
   if (error) {

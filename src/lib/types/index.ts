@@ -108,6 +108,7 @@ export interface StoreProfileData {
   websiteUrl?: string;
   mapLink?: string;
   phoneNumber: string;
+  whatsappNumber?: string;
   email?: string;
   isFollowing: boolean;
   createdAt: number;
