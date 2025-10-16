@@ -64,6 +64,9 @@ export default function AddressPage() {
       }
 
       // Sign in with custom token to get Firebase ID token
+      if (!auth) {
+        throw new Error('Firebase auth not initialized');
+      }
       const userCredential = await signInWithCustomToken(auth, customToken);
       const idToken = await userCredential.user.getIdToken();
 
@@ -81,6 +84,11 @@ export default function AddressPage() {
     console.log('🔐 getFirebaseIdToken: START');
     try {
       console.log('🔐 Firebase Auth instance:', auth);
+
+      if (!auth) {
+        console.error('🔐 ERROR: Firebase auth not initialized');
+        throw new Error('Firebase auth not initialized');
+      }
 
       const user = auth.currentUser;
       console.log('🔐 Current user:', user);
@@ -173,7 +181,7 @@ export default function AddressPage() {
         // Check if we need to redirect to checkout
         if (productId && quantity) {
           // Navigate to checkout with product details
-          const userId = customerId || auth.currentUser?.uid || localStorage.getItem('userId') || '';
+          const userId = customerId || auth?.currentUser?.uid || localStorage.getItem('userId') || '';
           const checkoutParams = new URLSearchParams({
             customerId: userId,
             productId,
@@ -209,7 +217,7 @@ export default function AddressPage() {
   const handleContinue = () => {
     // Continue without saving - redirect to checkout
     if (productId && quantity) {
-      const userId = customerId || auth.currentUser?.uid || localStorage.getItem('userId') || '';
+      const userId = customerId || auth?.currentUser?.uid || localStorage.getItem('userId') || '';
       const checkoutParams = new URLSearchParams({
         customerId: userId,
         productId,
