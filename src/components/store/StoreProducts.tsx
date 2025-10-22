@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import OptimizedImage from '@/components/shared/OptimizedImage';
+import { ProductsGridSkeleton, LoadingSpinner } from '@/components/ui/skeletons';
 import { apiClient } from '@/lib/api/client';
 import { storeStorage } from '@/lib/storage/storeStorage';
 import type { StoreProductsResponse, MiniProduct, StoreSortOption } from '@/lib/types';
@@ -34,8 +35,17 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 
   return (
     <div
-      className="group bg-white rounded-lg lg:rounded-xl border-0 sm:border sm:border-[#E0E0E0] hover:shadow-2xl lg:hover:scale-[1.05] transition-all duration-300 cursor-pointer overflow-hidden hover-lift-desktop"
+      className="group bg-white rounded-md sm:rounded-lg lg:rounded-xl border-0 sm:border sm:border-[#E0E0E0] hover:shadow-2xl lg:hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden hover-lift-desktop active:scale-95 touch-manipulation"
       onClick={() => onProductClick(product)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onProductClick(product);
+        }
+      }}
+      aria-label={`View ${product.name}`}
     >
       {/* Product Image - Square Aspect Ratio */}
       <div className="relative aspect-square overflow-hidden bg-[#F5F5F5]">
@@ -44,65 +54,46 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
           alt={product.name}
           variant="detail"
           fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1440px) 25vw, 20vw"
         />
 
-        {/* Discount Badge - Only show if discount is 5% or more */}
+        {/* Discount Badge - Compact on mobile */}
         {discountPercentage >= 5 && (
-          <div className="absolute top-3 left-3 bg-[#F44336] text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-md">
+          <div className="absolute top-1 left-1 sm:top-3 sm:left-3 bg-[#F44336] text-white text-[9px] sm:text-xs font-bold px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded sm:rounded-md shadow-md z-10">
             {discountPercentage}% OFF
           </div>
         )}
 
-        {/* Quick Actions - Show on hover */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-            }}
-            // className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
-          >
-            {/* <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-[#F44336] text-[#F44336]' : 'text-[#757575]'}`} /> */}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onProductClick(product);
-            }}
-            //className="w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-md"
-          >
-            {/* <Eye className="w-5 h-5 text-[#757575]" /> */}
-          </button>
-        </div>
+        {/* Touch-friendly overlay for mobile */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 lg:hidden" />
       </div>
 
-      {/* Product Info - Responsive padding and text sizes */}
-      <div className="p-2 sm:p-4">
-        {/* Product Name */}
-        <h3 className="font-medium text-[#212121] line-clamp-2 text-sm sm:text-base mb-1 sm:mb-2 leading-snug group-hover:text-[#00838F] transition-colors">
+      {/* Product Info - Compact but readable */}
+      <div className="p-2 sm:p-4 lg:p-5">
+        {/* Product Name - Compact on mobile */}
+        <h3 className="font-medium text-[#212121] line-clamp-2 text-xs sm:text-base mb-1.5 sm:mb-3 leading-snug group-hover:text-[#00838F] transition-colors min-h-[2rem] sm:min-h-[3rem]">
           {product.name}
         </h3>
 
-        {/* Price Section */}
-        <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+        {/* Price Section - Prominent pricing */}
+        <div className="flex items-center gap-1.5 mb-1.5 sm:mb-3">
           <div className="text-base sm:text-xl font-bold text-[#00838F]">
             ₹{Math.round(product.sellingPrice).toLocaleString('en-IN')}
           </div>
 
           {product.mrp && product.mrp > product.sellingPrice && (
-            <div className="text-xs sm:text-sm text-[#9E9E9E] line-through">
+            <div className="text-[10px] sm:text-sm text-[#9E9E9E] line-through">
               ₹{Math.round(product.mrp).toLocaleString('en-IN')}
             </div>
           )}
         </div>
 
-        {/* Rating - Only show if rating exists and is greater than 0 */}
+        {/* Rating - Compact */}
         {(product.averageRating ?? 0) > 0 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 bg-[#F5F5F5] rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 w-fit">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-[#FFC107] text-[#FFC107]" />
-            <span className="text-xs sm:text-sm font-medium text-[#212121]">
+            <span className="text-[10px] sm:text-sm font-semibold text-[#212121]">
               {product.averageRating!.toFixed(1)}
             </span>
           </div>
@@ -275,8 +266,8 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
         </div>
       </div>
 
-      {/* Compact Sort Bar - Mobile Only */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-[#E0E0E0] px-2 py-2 flex items-center justify-between">
+      {/* Compact Sort Bar - Mobile Only - Pulled closer to tabs */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-[#E0E0E0] px-2 py-2 flex items-center justify-between -mt-5">
         <span className="text-sm text-[#757575] font-medium">{products.length} products</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -307,29 +298,29 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
         </DropdownMenu>
       </div>
 
-      {/* Products Grid - Maximum Space on Mobile */}
-      <div className="px-1 sm:px-2 lg:px-6 py-2 sm:py-4 lg:py-8">
+      {/* Products Grid - Maximized product visibility */}
+      <div className="px-0 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-8">
         {products.length > 0 ? (
           <>
-            {/* Responsive Grid: Mobile 2 cols → Tablet 2 cols → Desktop 3 cols → XL 4 cols */}
+            {/* Responsive Grid: Mobile 2 cols (edge-to-edge) → Tablet 2 cols → Desktop 3 cols → XL 4 cols */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-6 lg:gap-8">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} onProductClick={handleProductClick} />
               ))}
             </div>
 
-            {/* Load More Button - Enhanced Desktop */}
+            {/* Load More Button - Enhanced with better loading state */}
             {hasNextPage && (
               <div className="flex justify-center mt-10 lg:mt-12">
                 <Button
                   onClick={handleLoadMore}
                   disabled={loading}
-                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-full px-10 lg:px-12 h-12 lg:h-14 font-semibold text-base lg:text-lg hover-lift-desktop"
+                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-full px-10 lg:px-12 h-12 lg:h-14 font-semibold text-base lg:text-lg hover-lift-desktop min-w-[200px] relative"
                 >
                   {loading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Loading...
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      <span>Loading...</span>
                     </>
                   ) : (
                     'Load More Products'
@@ -339,20 +330,8 @@ export default function StoreProducts({ storeId, initialData }: StoreProductsPro
             )}
           </>
         ) : loading ? (
-          // Loading Skeleton - Optimized for all screens
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-6 lg:gap-8">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-[#E0E0E0] overflow-hidden">
-                <div className="aspect-square bg-gradient-to-br from-[#E0E0E0] to-[#F5F5F5] animate-pulse" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-[#E0E0E0] rounded animate-pulse" />
-                  <div className="h-3 bg-[#E0E0E0] rounded w-3/4 animate-pulse" />
-                  <div className="h-6 bg-[#E0E0E0] rounded w-1/2 animate-pulse" />
-                  <div className="h-9 bg-[#E0E0E0] rounded animate-pulse" />
-                </div>
-              </div>
-            ))}
-          </div>
+          // Loading Skeleton - Using dedicated component
+          <ProductsGridSkeleton count={12} />
         ) : (
           // Empty State
           <div className="flex flex-col items-center justify-center py-20">

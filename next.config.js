@@ -1,18 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable SWC minification to avoid worker issues
-  swcMinify: false,
+  // Enable SWC minification for production builds
+  swcMinify: true,
 
   // Exclude Firebase from server-side bundling
   serverComponentsExternalPackages: ['firebase', 'firebase/app', 'firebase/auth'],
 
-  // Optimize webpack configuration for Windows
+  // Optimize webpack configuration
   webpack: (config, { dev, isServer }) => {
-    // Disable parallelism to prevent worker issues
-    config.parallelism = 1;
+    // Enable parallelism in production for better performance
+    config.parallelism = dev ? 1 : 4;
 
-    // Disable cache to prevent corruption issues
-    config.cache = false;
+    // Enable cache in production for faster rebuilds
+    config.cache = !dev;
 
     // Fix Firebase on server side - completely exclude from server bundle
     if (isServer) {
@@ -45,7 +45,7 @@ const nextConfig = {
       // Firebase should only be in client bundle
       config.optimization = {
         ...config.optimization,
-        minimize: false, // Temporarily disable minification
+        minimize: true, // Enable minification for production
         splitChunks: isServer ? false : {
           chunks: 'all',
           cacheGroups: {
@@ -59,11 +59,25 @@ const nextConfig = {
               priority: 10,
               enforce: true,
             },
+            // React and Next.js core
+            framework: {
+              name: 'framework',
+              test: /[\\/]node_modules[\\/](react|react-dom|next|scheduler)[\\/]/,
+              priority: 20,
+              enforce: true,
+            },
+            // UI libraries
+            ui: {
+              name: 'ui',
+              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|clsx|tailwind-merge)[\\/]/,
+              priority: 15,
+              enforce: true,
+            },
             // Other vendor code
             vendor: {
               name: 'vendor',
               chunks: 'all',
-              test: /[\\/]node_modules[\\/](?!(@firebase|firebase)[\\/])/,
+              test: /[\\/]node_modules[\\/](?!(@firebase|firebase|react|react-dom|next|@radix-ui)[\\/])/,
               priority: 5,
             },
           },

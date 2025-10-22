@@ -165,12 +165,16 @@
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
   }
-  
+
+  .animate-shimmer-slide {
+    animation: shimmer-slide 1.5s ease-in-out infinite;
+  }
+
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
-  
+
   @keyframes slideUp {
     from {
       opacity: 0;
@@ -181,7 +185,7 @@
       transform: translateY(0);
     }
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -192,13 +196,22 @@
       transform: translateY(0);
     }
   }
-  
+
   @keyframes shimmer {
     0% {
       background-position: -200px 0;
     }
     100% {
       background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  @keyframes shimmer-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
   

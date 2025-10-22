@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Phone } from 'lucide-react';
 import { STORE_TABS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,27 @@ export default function StoreProfilePage({
   error,
 }: StoreProfilePageProps) {
   const [activeTab, setActiveTab] = useState<string>(STORE_TABS.PRODUCTS);
+  const [isPending, startTransition] = useTransition();
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const handleTabChange = (newTab: string) => {
+    if (newTab === activeTab) return;
+
+    // Smooth scroll to top of content
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Trigger fade-out animation
+    setIsTransitioning(true);
+
+    // Use React transition for non-blocking updates
+    startTransition(() => {
+      // Wait for fade-out animation to complete
+      setTimeout(() => {
+        setActiveTab(newTab);
+        setIsTransitioning(false);
+      }, 150);
+    });
+  };
 
   const handleContact = () => {
     const phoneNumber = storeData.whatsappNumber ?? storeData.phoneNumber;
@@ -89,20 +110,23 @@ export default function StoreProfilePage({
       {/* Store Header (Hero Section) */}
       <StoreHeader storeData={storeData} />
 
-      {/* Mobile Tabs - Sticky Below Header */}
-      <div className="lg:hidden sticky top-14 md:top-16 z-40 bg-white border-b border-[#E0E0E0] shadow-sm">
+      {/* Mobile Tabs - Sticky Below Header with Touch Optimization */}
+      <div className="lg:hidden sticky top-14 md:top-16 z-40 bg-white border-b border-[#E0E0E0] shadow-sm mb-0">
         <div className="flex overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={`
-                relative flex-shrink-0 px-6 py-4 font-medium text-base transition-all duration-300 border-b-3
+                relative flex-shrink-0 px-6 py-4 font-medium text-base transition-all duration-300 border-b-3 touch-manipulation active:scale-95
                 ${activeTab === tab.key
                   ? 'text-[#00838F] border-[#00BCD4]'
                   : 'text-[#757575] border-transparent hover:text-[#00838F] hover:bg-[#F5F5F5]'
                 }
               `}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              aria-controls={`panel-${tab.key}`}
             >
               {tab.label}
               {tab.count !== undefined && (
@@ -227,19 +251,22 @@ export default function StoreProfilePage({
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => handleTabChange(tab.key)}
                     className={`
-                      w-full text-left px-6 py-4 font-medium text-base transition-all duration-300 border-l-4
+                      w-full text-left px-6 py-4 font-medium text-base transition-all duration-300 border-l-4 hover-lift
                       ${activeTab === tab.key
                         ? 'bg-[#E0F7FA] text-[#00838F] border-[#00BCD4]'
                         : 'bg-white text-[#757575] border-transparent hover:bg-[#F5F5F5] hover:text-[#00838F]'
                       }
                     `}
+                    role="tab"
+                    aria-selected={activeTab === tab.key}
+                    aria-controls={`panel-${tab.key}`}
                   >
                     <div className="flex items-center justify-between">
                       <span>{tab.label}</span>
                       {tab.count !== undefined && (
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
                           activeTab === tab.key
                             ? 'bg-[#00BCD4] text-white'
                             : 'bg-[#E0E0E0] text-[#757575]'
@@ -254,9 +281,15 @@ export default function StoreProfilePage({
             </div>
           </aside>
 
-          {/* Main Content */}
-          <main className="lg:col-span-9">
-            <div className="animate-fade-in">
+          {/* Main Content with Smooth Transitions */}
+          <main className="lg:col-span-9" role="tabpanel" id={`panel-${activeTab}`}>
+            <div
+              className={`transition-all duration-300 ${
+                isTransitioning
+                  ? 'opacity-0 translate-y-4'
+                  : 'opacity-100 translate-y-0 animate-fade-in'
+              }`}
+            >
               {activeTab === STORE_TABS.PRODUCTS && (
                 <StoreProducts
                   storeId={storeId}

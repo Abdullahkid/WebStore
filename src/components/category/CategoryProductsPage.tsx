@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Package, Star, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
+import { ProductsGridSkeleton, LoadingSpinner } from '@/components/ui/skeletons';
 import { apiClient } from '@/lib/api/client';
 import type { StoreProductsResponse, MiniProduct } from '@/lib/types';
 
@@ -29,8 +30,17 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 
   return (
     <div
-      className="group bg-white rounded-lg lg:rounded-xl border border-[#E0E0E0] hover:shadow-2xl lg:hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group bg-white rounded-md sm:rounded-lg lg:rounded-xl border-0 sm:border sm:border-[#E0E0E0] hover:shadow-2xl lg:hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden active:scale-95 touch-manipulation"
       onClick={() => onProductClick(product)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onProductClick(product);
+        }
+      }}
+      aria-label={`View ${product.name}`}
     >
       {/* Product Image - Square Aspect Ratio */}
       <div className="relative aspect-square overflow-hidden bg-[#F5F5F5]">
@@ -39,43 +49,43 @@ const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
           alt={product.name}
           variant="detail"
           fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
 
-        {/* Discount Badge */}
+        {/* Discount Badge - Compact on mobile */}
         {discountPercentage >= 5 && (
-          <div className="absolute top-3 left-3 bg-[#F44336] text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-md">
+          <div className="absolute top-1 left-1 sm:top-3 sm:left-3 bg-[#F44336] text-white text-[9px] sm:text-xs font-bold px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded sm:rounded-md shadow-md z-10">
             {discountPercentage}% OFF
           </div>
         )}
       </div>
 
-      {/* Product Info */}
-      <div className="p-3 sm:p-4">
-        {/* Product Name */}
-        <h3 className="font-semibold text-[#212121] line-clamp-2 text-sm sm:text-base mb-2 leading-snug group-hover:text-[#00838F] transition-colors">
+      {/* Product Info - Compact but readable */}
+      <div className="p-2 sm:p-4 lg:p-5">
+        {/* Product Name - Compact on mobile */}
+        <h3 className="font-semibold text-[#212121] line-clamp-2 text-xs sm:text-base mb-1.5 sm:mb-3 leading-snug group-hover:text-[#00838F] transition-colors min-h-[2rem] sm:min-h-[3rem]">
           {product.name}
         </h3>
 
-        {/* Price Section */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="text-lg sm:text-xl font-bold text-[#00838F]">
+        {/* Price Section - Prominent pricing */}
+        <div className="flex items-center gap-1.5 mb-1.5 sm:mb-3">
+          <div className="text-base sm:text-xl font-bold text-[#00838F]">
             ₹{Math.round(product.sellingPrice).toLocaleString('en-IN')}
           </div>
 
           {product.mrp && product.mrp > product.sellingPrice && (
-            <div className="text-xs sm:text-sm text-[#9E9E9E] line-through">
+            <div className="text-[10px] sm:text-sm text-[#9E9E9E] line-through">
               ₹{Math.round(product.mrp).toLocaleString('en-IN')}
             </div>
           )}
         </div>
 
-        {/* Rating */}
+        {/* Rating - Compact */}
         {(product.averageRating ?? 0) > 0 && (
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-[#FFC107] text-[#FFC107]" />
-            <span className="text-sm font-medium text-[#212121]">
+          <div className="flex items-center gap-1 bg-[#F5F5F5] rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 w-fit">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-[#FFC107] text-[#FFC107]" />
+            <span className="text-[10px] sm:text-sm font-semibold text-[#212121]">
               {product.averageRating!.toFixed(1)}
             </span>
           </div>
@@ -221,12 +231,12 @@ export default function CategoryProductsPage({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Content - Maximized product visibility */}
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-4 sm:py-8">
         {products.length > 0 ? (
           <>
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Products Grid - Edge-to-edge on mobile for larger products */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -236,18 +246,18 @@ export default function CategoryProductsPage({
               ))}
             </div>
 
-            {/* Load More Button */}
+            {/* Load More Button - Enhanced loading state */}
             {hasNextPage && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-8 sm:mt-10">
                 <Button
                   onClick={loadMoreProducts}
                   disabled={loading}
-                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-lg transition-all rounded-full px-10 h-12 font-semibold text-base"
+                  className="bg-gradient-to-r from-[#00BCD4] to-[#0097A7] text-white hover:shadow-brand-soft transition-all rounded-full px-10 h-12 font-semibold text-base min-w-[200px] active:scale-95 touch-manipulation"
                 >
                   {loading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Loading...
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      <span>Loading...</span>
                     </>
                   ) : (
                     'Load More Products'
@@ -257,19 +267,8 @@ export default function CategoryProductsPage({
             )}
           </>
         ) : loading ? (
-          // Loading Skeleton
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-[#E0E0E0] overflow-hidden">
-                <div className="aspect-square bg-gradient-to-br from-[#E0E0E0] to-[#F5F5F5] animate-pulse" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-[#E0E0E0] rounded animate-pulse" />
-                  <div className="h-3 bg-[#E0E0E0] rounded w-3/4 animate-pulse" />
-                  <div className="h-6 bg-[#E0E0E0] rounded w-1/2 animate-pulse" />
-                </div>
-              </div>
-            ))}
-          </div>
+          // Loading Skeleton - Using dedicated component
+          <ProductsGridSkeleton count={12} />
         ) : (
           // Empty State
           <div className="flex flex-col items-center justify-center py-20">
