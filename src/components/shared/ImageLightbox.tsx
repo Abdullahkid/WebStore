@@ -24,8 +24,9 @@ export default function ImageLightbox({
   const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
+    console.log('🖼️ Lightbox opened with:', { initialIndex, totalImages: images.length, images });
     setCurrentIndex(initialIndex);
-  }, [initialIndex]);
+  }, [initialIndex, images]);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,11 +64,13 @@ export default function ImageLightbox({
   if (!isOpen) return null;
 
   const handlePrevious = () => {
+    console.log('⬅️ Previous clicked, current:', currentIndex);
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
     setIsZoomed(false);
   };
 
   const handleNext = () => {
+    console.log('➡️ Next clicked, current:', currentIndex);
     setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
     setIsZoomed(false);
   };
@@ -79,11 +82,16 @@ export default function ImageLightbox({
   return (
     <div
       className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm animate-fade-in"
-      onClick={onClose}
+      onClick={(e) => {
+        // Only close if clicking the background, not any child elements
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center justify-between p-4 md:p-6">
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+        <div className="flex items-center justify-between p-4 md:p-6 pointer-events-auto">
           <div className="flex-1">
             <h2 className="text-white text-lg md:text-xl font-semibold line-clamp-1">
               {productTitle}
@@ -94,7 +102,11 @@ export default function ImageLightbox({
           </div>
 
           <Button
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('❌ Close button clicked');
+              onClose();
+            }}
             variant="ghost"
             size="sm"
             className="text-white hover:bg-white/20 rounded-full p-2 h-auto"
@@ -106,16 +118,19 @@ export default function ImageLightbox({
 
       {/* Main Image Container */}
       <div
-        className="absolute inset-0 flex items-center justify-center p-4 md:p-20"
-        onClick={(e) => e.stopPropagation()}
+        className="absolute inset-0 flex items-center justify-center p-4 md:p-20 pointer-events-none"
       >
         <div
-          className={`relative max-w-7xl max-h-full transition-transform duration-300 ${
+          className={`relative max-w-7xl max-h-full transition-transform duration-300 pointer-events-auto ${
             isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'
           }`}
-          onClick={toggleZoom}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleZoom();
+          }}
         >
           <OptimizedImage
+            key={`lightbox-${images[currentIndex]}-${currentIndex}`}
             imageId={images[currentIndex]}
             alt={`${productTitle} - Image ${currentIndex + 1}`}
             variant="detail"
@@ -132,7 +147,7 @@ export default function ImageLightbox({
               e.stopPropagation();
               handlePrevious();
             }}
-            className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all hover:scale-110"
+            className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all hover:scale-110 z-20"
           >
             <ChevronLeft className="w-8 h-8 text-white" />
           </button>
@@ -142,7 +157,7 @@ export default function ImageLightbox({
               e.stopPropagation();
               handleNext();
             }}
-            className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all hover:scale-110"
+            className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all hover:scale-110 z-20"
           >
             <ChevronRight className="w-8 h-8 text-white" />
           </button>
@@ -150,8 +165,8 @@ export default function ImageLightbox({
       )}
 
       {/* Bottom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="p-4 md:p-6">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent z-30 pointer-events-none">
+        <div className="p-4 md:p-6 pointer-events-auto">
           {/* Zoom Controls - Desktop Only */}
           <div className="hidden lg:flex justify-center gap-3 mb-4">
             <Button
@@ -192,6 +207,7 @@ export default function ImageLightbox({
                   key={index}
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log(`🖱️ Thumbnail ${index} clicked`);
                     setCurrentIndex(index);
                     setIsZoomed(false);
                   }}
@@ -218,14 +234,14 @@ export default function ImageLightbox({
       {images.length > 1 && (
         <>
           <div
-            className="lg:hidden absolute left-0 top-0 bottom-0 w-1/3"
+            className="lg:hidden absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handlePrevious();
             }}
           />
           <div
-            className="lg:hidden absolute right-0 top-0 bottom-0 w-1/3"
+            className="lg:hidden absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handleNext();
