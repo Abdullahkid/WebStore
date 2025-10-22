@@ -422,10 +422,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Product Images - 5 columns on desktop */}
           <div className="lg:col-span-5 xl:col-span-5">
-            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-200/50 sticky top-24">
+            <div className="lg:bg-white lg:rounded-3xl lg:p-6 lg:shadow-xl lg:border lg:border-slate-200/50 lg:sticky lg:top-24">
               {/* Main Image */}
               <div
-                className="aspect-square mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 cursor-pointer image-zoom-container"
+                className="aspect-square mb-4 lg:mb-6 rounded-xl lg:rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 cursor-pointer image-zoom-container"
                 onClick={() => openLightbox(safeImageIndex)}
               >
                 <OptimizedImage
